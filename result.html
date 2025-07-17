@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>藥單顯示頁</title>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const ward = params.get("ward");
+    const barcode = params.get("barcode");
+    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+
+    function fetchDrugs() {
+      const url = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`;
+      fetch(url, {
+        headers: { Authorization: token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.content?.drugList?.length) {
+          alert("查無藥品資料");
+          return;
+        }
+        const tbody = document.getElementById("medBody");
+        data.content.drugList.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><img src="${item.imageUrl}" width="60" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        alert("讀取藥品失敗");
+        console.error(err);
+      });
+    }
+
+    window.onload = fetchDrugs;
+  </script>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      padding: 20px;
+      background: #fffbe0;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 700px;
+      background: white;
+      box-shadow: 0 0 10px #ccc;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background: #fcd84c;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 藥單內容顯示</h2>
+  <div>護理站：<strong id="wardDisplay">${ward}</strong></div>
+  <div>條碼：<strong id="barcodeDisplay">${barcode}</strong></div>
+  <table>
+    <thead>
+      <tr>
+        <th>藥品圖片</th>
+        <th>藥品名稱</th>
+        <th>劑量</th>
+        <th>數量</th>
+      </tr>
+    </thead>
+    <tbody id="medBody"></tbody>
+  </table>
+</body>
+</html>

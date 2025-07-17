@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>掃描藥單頁面</title>
+  <script type="module">
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm';
+
+    const startBtn = document.getElementById("startScan");
+    const video = document.getElementById("preview");
+    const wardSelect = document.getElementById("ward");
+
+    const codeReader = new BrowserMultiFormatReader();
+
+    startBtn.addEventListener("click", () => {
+      const ward = wardSelect.value;
+      if (!ward) {
+        alert("請選擇護理站");
+        return;
+      }
+
+      codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+        if (result) {
+          const barcode = result.text;
+          codeReader.reset();
+          window.location.href = "https://Wade5210.github.io/med/result.html?ward=" + encodeURIComponent(ward) + "&barcode=" + encodeURIComponent(barcode);
+        }
+      });
+    });
+  </script>
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; padding: 20px; background: #eef7ff; text-align: center; }
+    select, button { padding: 10px; margin: 10px; font-size: 16px; }
+    video { width: 90%; max-width: 400px; border: 2px solid #007acc; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h2>📷 掃描藥單條碼</h2>
+  <label>
+    護理站：
+    <select id="ward">
+      <option value="">請選擇</option>
+      <option value="N10">N10</option>
+      <option value="N11">N11</option>
+      <option value="N12">N12</option>
+      <option value="N13">N13</option>
+      <option value="N14">N14</option>
+    </select>
+  </label>
+  <br>
+  <button id="startScan">開始掃描</button>
+  <div><video id="preview"></video></div>
+</body>
+</html>
