@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 掃描藥單（含護理站比對）</title>
+  <script type="module">
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm';
+
+    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    const codeReader = new BrowserMultiFormatReader();
+    const video = document.getElementById('preview');
+    const scannerArea = document.getElementById('scannerArea');
+    const startScanBtn = document.getElementById('startScan');
+    const wardSelect = document.getElementById('wardSelect');
+    const medBody = document.getElementById('medBody');
+
+    function showModal(img) {
+      const modal = document.getElementById('imgModal');
+      const modalImg = document.getElementById('modalImage');
+      modalImg.src = img.src;
+      modal.style.display = 'flex';
+    }
+
+    function updateTotalCount() {
+      const checks = document.querySelectorAll('.med-check');
+      const total = checks.length;
+      let checked = 0;
+      checks.forEach(cb => {
+        if (cb.checked) checked++;
+      });
+      document.getElementById('totalCount').textContent = `${checked} / ${total}`;
+    }
+
+    function fetchAndDisplayMeds(ward, barcode) {
+      const apiURL = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`;
+      fetch(apiURL, {
+        headers: { Authorization: token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data?.content?.drugList || !Array.isArray(data.content.drugList)) {
+          alert("❌ 查無藥品資料");
+          return;
+        }
+
+        const apiWard = data.content.ward?.trim();
+        if (apiWard !== ward) {
+          if (!confirm(`❗掃描藥單所屬護理站為【${apiWard}】，與你選擇的【${ward}】不符。
+是否繼續？`)) {
+            location.reload();
+            return;
+          }
+        }
+
+        medBody.innerHTML = "";
+        data.content.drugList.forEach(item => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><img src="${item.imageUrl}" class="med-image" onclick="showModal(this)" alt="${item.itemName}" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+            <td><input type="checkbox" class="med-check" checked /></td>
+          `;
+          medBody.appendChild(row);
+        });
+        updateTotalCount();
+      })
+      .catch(err => {
+        alert("⚠ 無法取得藥品資料！");
+        console.error(err);
+      });
+    }
+
+    startScanBtn.addEventListener('click', () => {
+      const selectedWard = wardSelect.value;
+      if (!selectedWard) {
+        alert("請先選擇護理站");
+        return;
+      }
+      scannerArea.style.display = 'block';
+      startScanBtn.style.display = 'none';
+      codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+        if (result) {
+          const barcode = result.text;
+          codeReader.reset(); // 停止掃描
+          scannerArea.style.display = 'none';
+          fetchAndDisplayMeds(selectedWard, barcode);
+        }
+      });
+    });
+
+    document.addEventListener('change', updateTotalCount);
+  </script>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #f0faff;
+      color: #1a3c5e;
+      padding: 30px 20px;
+    }
+    h2, h3 { text-align: center; }
+    #startScan {
+      display: block;
+      margin: 20px auto;
+      padding: 20px;
+      background: #007acc;
+      color: white;
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    #scannerArea {
+      display: none;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 3px solid #aaa;
+      border-radius: 10px;
+    }
+    #wardSelectArea {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    select {
+      font-size: 16px;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #b2d7f2;
+    }
+    img.med-image {
+      width: 60px;
+      height: auto;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    #summary {
+      text-align: center;
+      margin: 15px;
+      font-size: 18px;
+    }
+    #imgModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #imgModal img {
+      max-width: 90%;
+      max-height: 90%;
+      border: 5px solid white;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 掃描藥單系統</h2>
+  <div id="wardSelectArea">
+    護理站：
+    <select id="wardSelect">
+      <option value="">請選擇</option>
+      <option value="N10">N10</option>
+      <option value="N11">N11</option>
+      <option value="N12">N12</option>
+      <option value="N13">N13</option>
+      <option value="N14">N14</option>
+    </select>
+  </div>
+
+  <button id="startScan">📷 開始掃描條碼</button>
+
+  <div id="scannerArea">
+    <video id="preview"></video>
+  </div>
+
+  <div id="summary">✅ 已勾選藥品數量：<span id="totalCount">0 / 0</span></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>藥品圖片</th>
+        <th>藥品名稱</th>
+        <th>劑量</th>
+        <th>數量</th>
+        <th>已簽收</th>
+      </tr>
+    </thead>
+    <tbody id="medBody"></tbody>
+  </table>
+
+  <div id="imgModal" onclick="this.style.display='none'">
+    <img id="modalImage" src="" />
+  </div>
+</body>
+</html>
