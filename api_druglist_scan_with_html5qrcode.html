@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>模擬藥單顯示頁</title>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #ffefc1;
+      padding: 20px;
+      text-align: center;
+    }
+    h2 { margin: 10px 0; }
+    input, button {
+      font-size: 16px;
+      padding: 8px 12px;
+      margin: 5px;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 800px;
+      background: white;
+      box-shadow: 0 0 10px #ccc;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background: #92ccee;
+      color: #000;
+    }
+    img.med-image {
+      width: 60px;
+      height: auto;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #countDisplay {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .btn-scan {
+      background: #3a85ff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript">
+    const reader = new Html5Qrcode("reader");
+    const qrConfig = { fps: 10, qrbox: 250 };
+    let scanned = false;
+
+    function onScanSuccess(decodedText, decodedResult) {
+      if (scanned) return;
+      scanned = true;
+      document.getElementById("barcode-result").innerHTML = `✅ 掃描成功：<strong>${decodedText}</strong>`;
+      document.getElementById("barcode")?.remove(); // 移除舊欄位（保險）
+      fetchDrugs(decodedText);
+      reader.stop().catch(err => console.error("無法停止掃描器", err));
+    }
+
+    reader.start({ facingMode: "environment" }, qrConfig, onScanSuccess)
+      .catch(err => {
+        document.getElementById("barcode-result").innerText = "🚫 無法啟動相機：" + err;
+      });
+
+    // 改寫 fetchDrugs 支援 barcode 參數
+    function fetchDrugs(barcode) {
+      const ward = document.getElementById("ward").value.trim();
+      if (!ward || !barcode) {
+        alert("請輸入護理站與掃描醫囑條碼！");
+        return;
+      }
+
+      const url = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`;
+      fetch(url, {
+        headers: {
+          Authorization: token,
+          Accept: "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const meds = data?.content?.drugList;
+        const tbody = document.getElementById("medBody");
+        const table = document.getElementById("resultTable");
+        const countDisplay = document.getElementById("countDisplay");
+        const rxInfo = document.getElementById("rxInfo");
+        tbody.innerHTML = "";
+        countDisplay.textContent = "";
+        rxInfo.innerHTML = "";
+
+        if (!meds || !Array.isArray(meds) || meds.length === 0) {
+          alert("❌ 查無資料");
+          table.style.display = "none";
+          return;
+        }
+
+        meds.forEach((item, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><img class="med-image" src="${item.imageUrl}" onerror="this.src='${defaultImg}'" alt="藥品圖" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+            <td><input type="checkbox" class="chkbox" onchange="updateCheckCount()"></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        table.style.display = "table";
+        rxInfo.innerHTML = `🆔 醫囑號：<strong>${barcode}</strong>`;
+        updateCheckCount();
+      })
+      .catch(err => {
+        console.error("API 發生錯誤", err);
+        alert("⚠️ 無法取得資料，請稍後再試");
+      });
+    }
+  </script>
+
+</head>
+
+<body>
+  <h2>📋 模擬藥單顯示頁</h2>
+  <div>
+    <input type="text" id="ward" placeholder="輸入護理站 (例如 N13)" />
+    <div id="reader" style="width:300px;margin:auto;"></div><p id="barcode-result">請掃描醫囑條碼</p>
+    <button onclick="fetchDrugs()">查詢</button>
+  </div>
+
+  <div id="rxInfo"></div>
+  <div id="countDisplay"></div>
+
+  <table id="resultTable" style="display: none;">
+    <thead>
+      <tr>
+        <th>藥品圖片</th>
+        <th>藥品名稱</th>
+        <th>劑量</th>
+        <th>數量</th>
+        <th>已簽收</th>
+      </tr>
+    </thead>
+    <tbody id="medBody"></tbody>
+  </table>
+
+  <button class="btn-scan" onclick="location.reload()">🔄 繼續掃描</button>
+
+  <script>
+    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    const defaultImg = "https://i.imgur.com/POcLxgF.png";
+
+    function fetchDrugs() {
+      const ward = document.getElementById("ward").value.trim();
+      const barcode = document.getElementById("barcode").value.trim();
+      if (!ward || !barcode) {
+        alert("請輸入護理站與條碼！");
+        return;
+      }
+
+      const url = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`;
+      fetch(url, {
+        headers: {
+          Authorization: token,
+          Accept: "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const meds = data?.content?.drugList;
+        const tbody = document.getElementById("medBody");
+        const table = document.getElementById("resultTable");
+        const countDisplay = document.getElementById("countDisplay");
+        const rxInfo = document.getElementById("rxInfo");
+        tbody.innerHTML = "";
+        countDisplay.textContent = "";
+        rxInfo.innerHTML = "";
+
+        if (!meds || !Array.isArray(meds) || meds.length === 0) {
+          alert("❌ 查無資料");
+          table.style.display = "none";
+          return;
+        }
+
+        let checkedCount = 0;
+
+        meds.forEach((item, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><img class="med-image" src="${item.imageUrl}" onerror="this.src='${defaultImg}'" alt="藥品圖" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+            <td><input type="checkbox" class="chkbox" onchange="updateCheckCount()"></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        table.style.display = "table";
+        rxInfo.innerHTML = `🆔 醫囑號：<strong>${barcode}</strong>`;
+        updateCheckCount();
+      })
+      .catch(err => {
+        console.error("API 發生錯誤", err);
+        alert("⚠️ 無法取得資料，請稍後再試");
+      });
+    }
+
+    function updateCheckCount() {
+      const total = document.querySelectorAll(".chkbox").length;
+      const checked = document.querySelectorAll(".chkbox:checked").length;
+      document.getElementById("countDisplay").textContent = `✅ 已勾選藥品數量：${checked} / ${total}`;
+    }
+  
+    const reader = new Html5Qrcode("reader");
+    const qrConfig = { fps: 10, qrbox: 250 };
+    let scanned = false;
+
+    function onScanSuccess(decodedText, decodedResult) {
+      if (scanned) return;
+      scanned = true;
+      document.getElementById("barcode-result").innerHTML = `✅ 掃描成功：<strong>${decodedText}</strong>`;
+      document.getElementById("barcode")?.remove(); // 移除舊欄位（保險）
+      fetchDrugs(decodedText);
+      reader.stop().catch(err => console.error("無法停止掃描器", err));
+    }
+
+    reader.start({ facingMode: "environment" }, qrConfig, onScanSuccess)
+      .catch(err => {
+        document.getElementById("barcode-result").innerText = "🚫 無法啟動相機：" + err;
+      });
+
+    // 改寫 fetchDrugs 支援 barcode 參數
+    function fetchDrugs(barcode) {
+      const ward = document.getElementById("ward").value.trim();
+      if (!ward || !barcode) {
+        alert("請輸入護理站與掃描醫囑條碼！");
+        return;
+      }
+
+      const url = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`;
+      fetch(url, {
+        headers: {
+          Authorization: token,
+          Accept: "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const meds = data?.content?.drugList;
+        const tbody = document.getElementById("medBody");
+        const table = document.getElementById("resultTable");
+        const countDisplay = document.getElementById("countDisplay");
+        const rxInfo = document.getElementById("rxInfo");
+        tbody.innerHTML = "";
+        countDisplay.textContent = "";
+        rxInfo.innerHTML = "";
+
+        if (!meds || !Array.isArray(meds) || meds.length === 0) {
+          alert("❌ 查無資料");
+          table.style.display = "none";
+          return;
+        }
+
+        meds.forEach((item, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><img class="med-image" src="${item.imageUrl}" onerror="this.src='${defaultImg}'" alt="藥品圖" /></td>
+            <td>${item.itemName}</td>
+            <td>${item.doseUnit}</td>
+            <td>${item.totQty}</td>
+            <td><input type="checkbox" class="chkbox" onchange="updateCheckCount()"></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        table.style.display = "table";
+        rxInfo.innerHTML = `🆔 醫囑號：<strong>${barcode}</strong>`;
+        updateCheckCount();
+      })
+      .catch(err => {
+        console.error("API 發生錯誤", err);
+        alert("⚠️ 無法取得資料，請稍後再試");
+      });
+    }
+  </script>
+
+</body>
+</html>
