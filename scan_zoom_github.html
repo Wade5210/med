@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📷 掃描醫囑條碼 (GitHub 跳轉版)</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%; background: black;
+      font-family: 'Noto Sans TC', sans-serif;
+      text-align: center; color: white;
+      overflow: hidden;
+    }
+    #reader {
+      width: 100vw; height: 100vh;
+    }
+    .overlay {
+      position: absolute; top: 20px; left: 0; right: 0;
+      z-index: 10; color: white; font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">請掃描醫囑條碼（固定護理站 N13）</div>
+  <div id="reader"></div>
+
+  <script>
+    const reader = new Html5Qrcode("reader");
+    reader.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      onScanSuccess
+    ).catch(err => alert("🚫 相機開啟失敗：" + err));
+
+    function onScanSuccess(decodedText, decodedResult) {
+      reader.stop().then(() => {
+        const url = `https://wade5210.github.io/med/result_zoom_github.html?ward=N13&barcode=${decodedText}`;
+        window.location.href = url;
+      });
+    }
+  </script>
+</body>
+</html>
