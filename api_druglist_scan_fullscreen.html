@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>全螢幕掃描藥單</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Noto Sans TC', sans-serif;
+      color: white;
+      text-align: center;
+    }
+    #overlay {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+    #reader {
+      width: 100vw;
+      height: 100vh;
+    }
+    #barcode-result {
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
+      margin: 10px auto;
+      display: inline-block;
+      border-radius: 8px;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      background-color: #00c853;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <h2>📷 全螢幕掃描醫囑條碼</h2>
+    <div id="barcode-result">請掃描條碼...</div><br/>
+    <input type="text" id="ward" value="N13" readonly style="font-size:18px;padding:5px;text-align:center;margin-top:8px;">
+  </div>
+  <div id="reader"></div>
+
+  <script>
+    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    const defaultImg = "https://i.imgur.com/POcLxgF.png";
+    const ward = document.getElementById("ward").value.trim();
+    let scanned = false;
+
+    const reader = new Html5Qrcode("reader");
+
+    function onScanSuccess(decodedText, decodedResult) {
+      if (scanned) return;
+      scanned = true;
+      document.getElementById("barcode-result").innerHTML = `✅ 掃描成功：<strong>${decodedText}</strong>`;
+      reader.stop().catch(err => console.error("相機停止錯誤", err));
+      fetchDrugList(decodedText);
+    }
+
+    function fetchDrugList(barcode) {
+      const url = `https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`;
+      fetch(url, {
+        headers: {
+          Authorization: token,
+          Accept: "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const drugList = data?.content?.drugList;
+        if (!drugList || !Array.isArray(drugList)) {
+          alert("❌ 查無資料");
+          return;
+        }
+        alert(`✅ 取得 ${drugList.length} 筆藥品資料`);
+        // TODO: 可導入到新頁面或顯示藥品清單
+      })
+      .catch(err => {
+        console.error("API 錯誤", err);
+        alert("⚠️ 查詢失敗");
+      });
+    }
+
+    reader.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 300, height: 300 } }, onScanSuccess)
+      .catch(err => {
+        document.getElementById("barcode-result").innerText = "🚫 無法啟動相機：" + err;
+      });
+  </script>
+</body>
+</html>
