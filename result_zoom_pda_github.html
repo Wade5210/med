@@ -1,154 +1,171 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <title>📋 顯示藥單結果（PDA 模式）</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: #f0f9ff;
-            padding: 20px;
-            text-align: center;
-        }
-
-        table {
-            border-collapse: collapse;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 800px;
-            background: white;
-            box-shadow: 0 0 10px #ccc;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 12px;
-            text-align: center;
-        }
-
-        th {
-            background: #1976d2;
-            color: white;
-        }
-
-        .btn {
-            background: #2e7d32;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            margin-top: 10px;
-            font-size: 16px;
-            border-radius: 8px;
-        }
-
-        .med-image {
-            width: 60px;
-            border-radius: 6px;
-            cursor: zoom-in;
-        }
-
-        #modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0,0,0,0.8);
-        }
-
-            #modal img {
-                margin-top: 5%;
-                max-width: 90%;
-                max-height: 90%;
-            }
-    </style>
+  <meta charset="UTF-8">
+  <title>📋 顯示藥單結果（PDA 模式）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #f0f9ff;
+      padding: 20px;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 800px;
+      background: white;
+      box-shadow: 0 0 10px #ccc;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background: #1976d2;
+      color: white;
+    }
+    .btn {
+      background: #2e7d32;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+    }
+    .med-image {
+      width: 60px;
+      border-radius: 6px;
+      cursor: zoom-in;
+    }
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.8);
+    }
+    #modal img {
+      margin-top: 5%;
+      max-width: 90%;
+      max-height: 90%;
+    }
+  </style>
 </head>
 <body>
-    <h2>藥品簽收清單</h2>
-    <p id="rxInfo"></p>
-    <p id="countDisplay"></p>
+  <h2>藥品簽收清單</h2>
+  <p id="rxInfo"></p>
+  <p id="countDisplay"></p>
 
-    <table id="resultTable" style="display:none;">
-        <thead>
-            <tr>
-                <th>圖片</th>
-                <th>藥品名稱</th>
-                <th>劑量</th>
-                <th>數量</th>
-                <th>簽收</th>
-            </tr>
-        </thead>
-        <tbody id="medBody"></tbody>
-    </table>
+  <table id="resultTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>圖片</th>
+        <th>藥品名稱</th>
+        <th>劑量</th>
+        <th>數量</th>
+        <th>簽收</th>
+      </tr>
+    </thead>
+    <tbody id="medBody"></tbody>
+  </table>
 
-    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
 
-    <div id="modal" onclick="this.style.display='none'">
-        <img id="modal-img" src="" alt="放大圖片" />
-    </div>
+  <div id="modal" onclick="this.style.display='none'">
+    <img id="modal-img" src="" alt="放大圖片" />
+  </div>
 
-    <script>
-        const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
-        const defaultImg = "https://i.imgur.com/POcLxgF.png";
+  <script>
+    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    const defaultImg = "https://i.imgur.com/POcLxgF.png";
 
-        const params = new URLSearchParams(location.search);
-        const ward = params.get("ward");
-        const barcode = params.get("barcode");
+    const params = new URLSearchParams(location.search);
+    const ward = params.get("ward");
+    const barcode = params.get("barcode");
 
-        if (!ward || !barcode) {
-            alert("缺少參數，請從掃描頁進入");
-        } else {
-            document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>`;
-            fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`, {
-                headers: {
-                    Authorization: token,
-                    Accept: "application/json"
-                }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    const meds = data?.content?.drugList;
-                    const tbody = document.getElementById("medBody");
-                    const table = document.getElementById("resultTable");
-                    if (!meds || meds.length === 0) {
-                        alert("❌ 查無資料");
-                        return;
-                    }
-
-                    meds.forEach(med => {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                <td><img src="${med.imageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
-                <td>${med.itemName}</td>
-                <td>${med.doseUnit}</td>
-                <td>${med.totQty}</td>
-                <td><input type="checkbox" class="chkbox" onchange="updateCount()" checked></td>
-              `;
-                        tbody.appendChild(tr);
-                    });
-
-                    table.style.display = "table";
-                    updateCount();
-                });
+    if (!ward || !barcode) {
+      alert("缺少參數，請從掃描頁進入");
+    } else {
+      document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>`;
+      fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`, {
+        headers: {
+          Authorization: token,
+          Accept: "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const meds = data?.content?.drugList;
+        const tbody = document.getElementById("medBody");
+        const table = document.getElementById("resultTable");
+        if (!meds || meds.length === 0) {
+          alert("❌ 查無資料");
+          return;
         }
 
-        function updateCount() {
-            const all = document.querySelectorAll(".chkbox").length;
-            const checked = document.querySelectorAll(".chkbox:checked").length;
-            document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
-        }
+        meds.forEach(med => {
+          const tr = document.createElement("tr");
 
-        function zoomImage(src) {
-            const modal = document.getElementById("modal");
-            const modalImg = document.getElementById("modal-img");
-            modalImg.src = src;
-            modal.style.display = "block";
-        }
-    </script>
+          const imgTd = document.createElement("td");
+          const img = document.createElement("img");
+          img.src = med.imageUrl;
+          img.className = "med-image";
+          img.onclick = () => zoomImage(img.src);
+          img.onerror = () => img.src = defaultImg;
+          imgTd.appendChild(img);
+
+          const nameTd = document.createElement("td");
+          nameTd.textContent = med.itemName;
+
+          const doseTd = document.createElement("td");
+          doseTd.textContent = med.doseUnit;
+
+          const qtyTd = document.createElement("td");
+          qtyTd.textContent = med.totQty;
+
+          const checkTd = document.createElement("td");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "chkbox";
+          checkbox.checked = true;
+          checkbox.onchange = updateCount;
+          checkTd.appendChild(checkbox);
+
+          tr.appendChild(imgTd);
+          tr.appendChild(nameTd);
+          tr.appendChild(doseTd);
+          tr.appendChild(qtyTd);
+          tr.appendChild(checkTd);
+
+          tbody.appendChild(tr);
+        });
+
+        table.style.display = "table";
+        updateCount();
+      });
+    }
+
+    function updateCount() {
+      const all = document.querySelectorAll(".chkbox").length;
+      const checked = document.querySelectorAll(".chkbox:checked").length;
+      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
+    }
+
+    function zoomImage(src) {
+      const modal = document.getElementById("modal");
+      const modalImg = document.getElementById("modal-img");
+      modalImg.src = src;
+      modal.style.display = "block";
+    }
+  </script>
 </body>
 </html>
