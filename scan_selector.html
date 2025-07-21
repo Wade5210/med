@@ -1,43 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>選擇掃描裝置</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <style>
-    body {
-      background: #e3f2fd;
-      font-family: 'Noto Sans TC', sans-serif;
-      text-align: center;
-      padding: 60px 20px;
-    }
-    h2 {
-      color: #1565c0;
-    }
-    .btn {
-      display: block;
-      width: 80%;
-      max-width: 300px;
-      margin: 20px auto;
-      padding: 60px;
-      font-size: 20px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      background: #1976d2;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .btn:hover {
-      background: #0d47a1;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>選擇掃描裝置</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet" />
+<style>
+  body {
+    background: #cde7ff;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: #2c3e50;
+    text-align: center;
+    padding: 60px 20px;
+    margin: 0;
+  }
+  h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+  .illustration {
+    width: 140px;
+    margin: 0 auto 40px;
+  }
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+    max-width: 360px;
+    margin: 20px auto;
+    padding: 28px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    background: #ffc8b8;
+    border: none;
+    border-radius: 24px;
+    box-shadow: 0 6px 12px rgba(255 200 184 / 0.5);
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  .btn:hover {
+    background: #ffb09a;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(255 176 154 / 0.7);
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn .icon {
+    font-size: 32px;
+    margin-right: 16px;
+    vertical-align: middle;
+  }
+</style>
 </head>
 <body>
+
+  <img src="https://cdn-icons-png.flaticon.com/512/822/822111.png" alt="cute nurse illustration" class="illustration" />
   <h2>請選擇裝置掃描方式</h2>
 
-  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">📱 手機</button>
-  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🤖 PDA</button>
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">
+    <span class="icon">📱</span> 手機掃描
+  </button>
+
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">
+    <span class="icon">🤖</span> PDA 掃描
+  </button>
+
 </body>
 </html>
