@@ -11,10 +11,11 @@
       padding: 40px;
       text-align: center;
     }
-    input {
+    select, input {
       font-size: 24px;
       padding: 12px;
       width: 80%;
+      margin-bottom: 20px;
       border: 2px solid #1976d2;
       border-radius: 8px;
     }
@@ -41,19 +42,31 @@
 </head>
 <body>
   <h2>請使用 PDA 掃描藥單條碼</h2>
-  <p>護理站：<strong>N13</strong></p>
+
+  <!-- 護理站下拉選單 -->
+  <select id="wardSelect">
+    <option value="N9">N9</option>
+    <option value="N10">N10</option>
+    <option value="N11">N11</option>
+    <option value="N12">N12</option>
+    <option value="N13" selected>N13</option>
+  </select>
+
+  <!-- 條碼掃描輸入 -->
   <input type="text" id="barcodeInput" placeholder="請掃描條碼..." autofocus />
 
-  <!-- 置底返回鈕 -->
+  <!-- 返回按鈕 -->
   <button class="btn btn-return" onclick="location.href='https://wade5210.github.io/med/scan_selector.html'">🔙 返回裝置選擇</button>
 
   <script>
-    const ward = "N13";
     const input = document.getElementById("barcodeInput");
+    const wardSelect = document.getElementById("wardSelect");
+
     input.addEventListener("keyup", function (e) {
       if (e.key === "Enter" || input.value.length >= 5) {
         const barcode = encodeURIComponent(input.value.trim());
-        if (barcode) {
+        const ward = encodeURIComponent(wardSelect.value);
+        if (barcode && ward) {
           location.href = `https://wade5210.github.io/med/result_zoom_pda_github.html?ward=${ward}&barcode=${barcode}`;
         }
       }
