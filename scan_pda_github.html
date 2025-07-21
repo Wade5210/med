@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -23,7 +22,6 @@
       color: #1976d2;
     }
     .btn {
-      margin-top: 30px;
       padding: 10px 20px;
       font-size: 16px;
       border: none;
@@ -31,14 +29,23 @@
       color: white;
       cursor: pointer;
     }
+    .btn-return {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #9e9e9e;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
   <h2>請使用 PDA 掃描藥單條碼</h2>
   <p>護理站：<strong>N13</strong></p>
   <input type="text" id="barcodeInput" placeholder="請掃描條碼..." autofocus />
-  
-  <button class="btn" style="background:#9e9e9e;" onclick="location.href='https://wade5210.github.io/med/scan_selector.html'">🔙 返回裝置選擇</button>
+
+  <!-- 置底返回鈕 -->
+  <button class="btn btn-return" onclick="location.href='https://wade5210.github.io/med/scan_selector.html'">🔙 返回裝置選擇</button>
 
   <script>
     const ward = "N13";
