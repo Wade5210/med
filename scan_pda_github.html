@@ -22,12 +22,23 @@
     h2 {
       color: #1976d2;
     }
+    .btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h2>請使用 PDA 掃描藥單條碼</h2>
   <p>護理站：<strong>N13</strong></p>
   <input type="text" id="barcodeInput" placeholder="請掃描條碼..." autofocus />
+  
+  <button class="btn" style="background:#9e9e9e;" onclick="location.href='https://wade5210.github.io/med/scan_selector.html'">🔙 返回裝置選擇</button>
 
   <script>
     const ward = "N13";
@@ -36,8 +47,7 @@
       if (e.key === "Enter" || input.value.length >= 5) {
         const barcode = encodeURIComponent(input.value.trim());
         if (barcode) {
-            location.href = `https://wade5210.github.io/med/result_zoom_pda_github.html?ward=${ward}&barcode=${barcode}
-      `;
+          location.href = `https://wade5210.github.io/med/result_zoom_pda_github.html?ward=${ward}&barcode=${barcode}`;
         }
       }
     });
