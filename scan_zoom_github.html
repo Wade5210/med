@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -18,8 +17,19 @@
       width: 100vw; height: 100vh;
     }
     .overlay {
-      position: absolute; top: 20px; left: 0; right: 0;
-      z-index: 10; color: white; font-size: 18px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 18px;
+    }
+    select {
+      font-size: 16px;
+      padding: 6px;
+      border-radius: 6px;
+      border: none;
+      margin-top: 5px;
     }
     .btn {
       position: absolute;
@@ -37,25 +47,36 @@
   </style>
 </head>
 <body>
-  <div class="overlay">請掃描醫囑條碼（固定護理站 N13）</div>
+  <div class="overlay">
+    <div>請掃描醫囑條碼</div>
+    <select id="wardSelect">
+      <option value="N9">N9</option>
+      <option value="N10">N10</option>
+      <option value="N11">N11</option>
+      <option value="N12">N12</option>
+      <option value="N13" selected>N13</option>
+    </select>
+  </div>
   <div id="reader"></div>
+
   <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_selector.html'">🔙 返回裝置選擇</button>
 
   <script>
     const reader = new Html5Qrcode("reader");
+
+    function onScanSuccess(decodedText, decodedResult) {
+      reader.stop().then(() => {
+        const ward = document.getElementById("wardSelect").value;
+        const url = `https://wade5210.github.io/med/result_zoom_github.html?ward=${encodeURIComponent(ward)}&barcode=${encodeURIComponent(decodedText)}`;
+        window.location.href = url;
+      });
+    }
+
     reader.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: 250 },
       onScanSuccess
     ).catch(err => alert("🚫 相機開啟失敗：" + err));
-
-    function onScanSuccess(decodedText, decodedResult) {
-      reader.stop().then(() => {
-        const url = `https://wade5210.github.io/med/result_zoom_github.html?ward=N13&barcode=${decodedText}`;
-        window.location.href = url;
-      });
-    }
   </script>
 </body>
 </html>
-
