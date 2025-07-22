@@ -70,7 +70,6 @@
       <tr>
         <th>圖片</th>
         <th>藥品名稱</th>
-        <th>劑量</th>
         <th>數量</th>
         <th>簽收</th>
       </tr>
@@ -126,9 +125,6 @@
           const nameTd = document.createElement("td");
           nameTd.textContent = med.itemName;
 
-          const doseTd = document.createElement("td");
-          doseTd.textContent = med.doseUnit;
-
           const qtyTd = document.createElement("td");
           qtyTd.textContent = med.totQty;
 
@@ -142,7 +138,6 @@
 
           tr.appendChild(imgTd);
           tr.appendChild(nameTd);
-          tr.appendChild(doseTd);
           tr.appendChild(qtyTd);
           tr.appendChild(checkTd);
 
