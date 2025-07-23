@@ -58,6 +58,10 @@
       max-width: 90%;
       max-height: 90%;
     }
+    .cancelled {
+      opacity: 0.5;
+      background-color: #eeeeee;
+    }
   </style>
 </head>
 <body>
@@ -71,7 +75,10 @@
         <th>圖片</th>
         <th>藥品名稱</th>
         <th>數量</th>
-        <th>簽收</th>
+        <th>
+          簽收<br>
+          <input type="checkbox" id="chkAll" onchange="toggleAll(this.checked)">
+        </th>
       </tr>
     </thead>
     <tbody id="medBody"></tbody>
@@ -133,19 +140,37 @@
           checkbox.type = "checkbox";
           checkbox.className = "chkbox";
           checkbox.checked = true;
-          checkbox.onchange = updateCount;
+          checkbox.onchange = () => handleCheckbox(checkbox);
           checkTd.appendChild(checkbox);
 
           tr.appendChild(imgTd);
           tr.appendChild(nameTd);
           tr.appendChild(qtyTd);
           tr.appendChild(checkTd);
-
           tbody.appendChild(tr);
+
+          handleCheckbox(checkbox); // 初始狀態處理
         });
 
         table.style.display = "table";
         updateCount();
+      });
+    }
+
+    function handleCheckbox(cb) {
+      const tr = cb.closest("tr");
+      if (cb.checked) {
+        tr.classList.remove("cancelled");
+      } else {
+        tr.classList.add("cancelled");
+      }
+      updateCount();
+    }
+
+    function toggleAll(checked) {
+      document.querySelectorAll(".chkbox").forEach(cb => {
+        cb.checked = checked;
+        handleCheckbox(cb);
       });
     }
 
