@@ -63,12 +63,14 @@
       margin-bottom: 8px;
     }
 
-    @media (max-width: 600px) {
-      .btn-container {
-        flex-direction: column;
-        gap: 20px;
-      }
-    }
+   @media (max-width: 600px) {
+  .btn-container {
+    flex-direction: column;
+    gap: 20px;     
+    justify-content: center;     /* 水平置中 */
+  }
+}
+
   </style>
 </head>
 <body>
@@ -76,8 +78,9 @@
   <h2>請選擇掃描方式</h2>
 
   <div class="info-box">
-    👤 使用者：<span id="empName">-</span>（<span id="empCode">-</span>）<br>
-    🏥 護理站：<span id="ward">-</span>
+     使用者：<span id="empName">-</span>（<span id="empCode">-</span>）<br>
+     ID：<span id="empNO">-</span><br>
+     護理站：<span id="ward">-</span>
   </div>
 
   <div class="btn-container">
