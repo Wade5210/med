@@ -1,167 +1,132 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 顯示藥單（卡片版）</title>
-  <style>
-    body {
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #e3f2fd;
-      padding: 10px;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <title>📋 顯示藥單</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f0f9ff;
+            padding: 20px;
+            text-align: center;
+        }
 
-    .info {
-      text-align: center;
-      margin: 12px 0;
-      font-size: 18px;
-    }
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+            width: 100%;
+            background: white;
+            box-shadow: 0 0 10px #ccc;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
 
-    .count {
-      font-weight: bold;
-      color: #2e7d32;
-    }
+        th, td {
+            border: 1px solid rgba(0,0,0,0.05); /* 超淡的線條 */
+        }
 
-    .card-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16px;
-      margin: 20px auto;
-      max-width: 960px;
-    }
+            td:nth-child(2) {
+                text-align: left;
+                padding-left: 12px;
+            }
 
-    .med-card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      min-width: 300px;
-      max-width: 420px;
-      flex: 1 1 45%;
-      box-sizing: border-box;
-      position: relative;
-    }
+        th {
+            background: #1976d2;
+            color: white;
+        }
 
-    .med-card.cancelled {
-      background-color: #e0e0e0;
-      opacity: 1;
-    }
+        .btn {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            margin-top: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+        }
 
-    .med-card img {
-      width: 64px;
-      height: 64px;
-      object-fit: contain;
-      border-radius: 8px;
-      cursor: zoom-in;
-    }
+        .med-image {
+            width: 60px;
+            border-radius: 6px;
+            cursor: zoom-in;
+        }
 
-    .med-info {
-      flex: 1;
-      text-align: left;
-    }
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.8);
+        }
 
-    .med-info .name {
-      font-weight: bold;
-      font-size: 17px;
-      margin-bottom: 4px;
-    }
+            #modal img {
+                margin-top: 5%;
+                max-width: 90%;
+                max-height: 90%;
+            }
 
-    .med-info .qty {
-      font-size: 15px;
-      color: #555;
-    }
+        .cancelled {
+            background-color: #dcdcdc;
+            color: #555;
+            opacity: 1;
+        }
 
-    .checkbox-area {
-      align-self: flex-start;
-    }
 
-    .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      background: #de58f0;;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      margin: 16px auto;
-      display: block;
-      font-weight: bold;
-    }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
 
-    .btn:hover {
-      background: #de58f0;
-    }
+            table {
+                width: 95%;
+                border-radius: 0;
+                box-shadow: none;
+            }
 
-    #modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0,0,0,0.8);
-    }
+            th, td {
+                font-size: 14px;
+                padding: 8px;
+            }
 
-    #modal img {
-      display: block;
-      margin: 5% auto;
-      max-width: 90%;
-      max-height: 90%;
-    }
-
-    @media (max-width: 600px) {
-      .med-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .med-card img {
-        margin-bottom: 8px;
-      }
-
-      .checkbox-area {
-        align-self: flex-end;
-      }
-
-      .btn {
-        width: 90%;
-      }
-    }
-  </style>
+            .btn {
+                width: 40%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
 </head>
 <body>
+    <p id="rxInfo"></p>
+    <p id="countDisplay"></p>
 
-  <div class="info" id="rxInfo"></div>
-  <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
-  
+    <div style="overflow-x:auto;">
+        <table id="resultTable" style="display:none;">
 
-  <div class="card-container" id="cardContainer"></div>
-  <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
-  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
+            <tbody id="medBody"></tbody>
+        </table>
+    </div>
 
-  <div id="modal" onclick="this.style.display='none'">
-    <img id="modal-img" src="" alt="放大圖片" />
-  </div>
+    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
 
-  <script>
-    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    <div id="modal" onclick="this.style.display='none'">
+        <img id="modal-img" src="" alt="放大圖片" />
+    </div>
+
+    <script>const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
     const defaultImg = "https://i.imgur.com/POcLxgF.png";
     const params = new URLSearchParams(location.search);
     const ward = params.get("ward");
     const barcode = params.get("barcode");
-    let allChecked = true;
 
     if (!ward || !barcode) {
       alert("缺少參數，請從掃描頁進入");
     } else {
       document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>`;
+
       fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`, {
         headers: {
           Authorization: token,
@@ -170,70 +135,52 @@
       })
       .then(res => res.json())
       .then(data => {
-        const meds = data?.content?.drugList || [];
-        const container = document.getElementById("cardContainer");
-        if (meds.length === 0) {
+        const meds = data?.content?.drugList;
+        const tbody = document.getElementById("medBody");
+        const table = document.getElementById("resultTable");
+        if (!meds || meds.length === 0) {
           alert("❌ 查無資料");
           return;
         }
 
         meds.forEach(med => {
-          const card = document.createElement("div");
-          card.className = "med-card";
-
-          const img = document.createElement("img");
-          img.src = med.ImageUrl;
-          img.onerror = () => img.src = defaultImg;
-          img.onclick = () => zoomImage(img.src);
-
-          const info = document.createElement("div");
-          info.className = "med-info";
-          info.innerHTML = `
-            <div class="name">${med.ItemName}</div>
-            <div class="qty">數量：${med.TotQty} ${med.DoseUnit}</div>
-          `;
-
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.className = "chkbox";
-          checkbox.checked = true;
-          checkbox.onchange = () => handleCheckbox(card, checkbox);
-
-          const checkWrap = document.createElement("div");
-          checkWrap.className = "checkbox-area";
-          checkWrap.appendChild(checkbox);
-
-          card.appendChild(img);
-          card.appendChild(info);
-          card.appendChild(checkWrap);
-
-          container.appendChild(card);
-          handleCheckbox(card, checkbox);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+  <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
+  <td>${med.ItemName}</td>
+  <td>${med.TotQty}</td>
+  <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
+`;
+          tbody.appendChild(tr);
+          handleCheckbox(tr.querySelector("input"));
         });
 
+        table.style.display = "table";
         updateCount();
       });
     }
 
-    function handleCheckbox(card, checkbox) {
-      card.classList.toggle("cancelled", !checkbox.checked);
+    function handleCheckbox(cb) {
+      const tr = cb.closest("tr");
+      if (cb.checked) {
+        tr.classList.remove("cancelled");
+      } else {
+        tr.classList.add("cancelled");
+      }
       updateCount();
     }
 
-    function updateCount() {
-      const total = document.querySelectorAll(".chkbox").length;
-      const checked = document.querySelectorAll(".chkbox:checked").length;
-      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${total}`;
+    function toggleAll(checked) {
+      document.querySelectorAll(".chkbox").forEach(cb => {
+        cb.checked = checked;
+        handleCheckbox(cb);
+      });
     }
 
-    function toggleAll() {
-      const boxes = document.querySelectorAll(".chkbox");
-      allChecked = !allChecked;
-      document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
-      boxes.forEach(cb => {
-        cb.checked = allChecked;
-        handleCheckbox(cb.closest(".med-card"), cb);
-      });
+    function updateCount() {
+      const all = document.querySelectorAll(".chkbox").length;
+      const checked = document.querySelectorAll(".chkbox:checked").length;
+      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
     }
 
     function zoomImage(src) {
@@ -241,7 +188,6 @@
       const modalImg = document.getElementById("modal-img");
       modalImg.src = src;
       modal.style.display = "block";
-    }
-  </script>
+    }</script>
 </body>
 </html>
