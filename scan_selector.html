@@ -2,73 +2,100 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>選擇掃描裝置</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📷 選擇掃描方式</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet" />
   <style>
     body {
-      background: #e0f7ff;
-      text-align: center;
       font-family: 'Noto Sans TC', sans-serif;
-      padding: 60px 20px;
+      background: #e3f2fd;
+      text-align: center;
       margin: 0;
+      padding: 40px 20px;
     }
+
     h2 {
-      font-size: 28px;
+      color: #1976d2;
+      margin-bottom: 10px;
+    }
+
+    .info-box {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       margin-bottom: 30px;
-      color: #333;
+      display: inline-block;
+      font-size: 16px;
+      line-height: 1.6;
     }
-    .illustration {
-      width: 140px;
-      margin-bottom: 40px;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
+
+    .btn-container {
+      display: flex;
       justify-content: center;
-      width: 180px;
-      height: 180px;
-      margin: 20px;
-      padding: 0;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .scan-btn {
+      width: 130px;
+      height: 130px;
+      border-radius: 20px;
       border: none;
       background: white;
-      border-radius: 24px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #333;
       cursor: pointer;
+      transition: transform 0.2s;
     }
-    .btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+
+    .scan-btn:hover {
+      transform: translateY(-4px);
     }
-    .btn img {
-      width: 65%;
+
+    .scan-btn img {
+      width: 48px;
+      margin-bottom: 8px;
     }
-    .label {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #444;
+
+    @media (max-width: 600px) {
+      .btn-container {
+        flex-direction: column;
+        gap: 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <img src="https://cdn-icons-png.flaticon.com/512/822/822111.png" alt="nurse" class="illustration" />
-  <h2>請選擇裝置掃描方式</h2>
+  <h2>請選擇掃描方式</h2>
 
-  <div>
-      <div class="label">相機掃描</div>
-    <a href="scan_zoom_github.html" class="btn" title="手機掃描">
-      <img src="https://cdn-icons-png.flaticon.com/512/9536/9536628.png" alt="手機掃描">
-    </a>
+  <div class="info-box">
+    👤 使用者：<span id="empName">-</span>（<span id="empCode">-</span>）<br>
+    🏥 護理站：<span id="ward">-</span>
   </div>
 
-  <div>
-       <div class="label">掃描器掃描</div>
-    <a href="scan_pda_github.html" class="btn" title="PDA 掃描">
-      <img src="https://cdn-icons-png.flaticon.com/512/1550/1550324.png" alt="PDA 掃描">
-    </a>
+  <div class="btn-container">
+    <button class="scan-btn" onclick="location.href='scan_zoom_github.html'">
+      <img src="https://cdn-icons-png.flaticon.com/512/9536/9536628.png" alt="camera" />
+      相機掃描
+    </button>
+    <button class="scan-btn" onclick="location.href='scan_pda_github.html'">
+      <img src="https://cdn-icons-png.flaticon.com/512/1550/1550324.png" alt="pda" />
+      PDA 掃描
+    </button>
   </div>
+
+  <script>
+    document.getElementById("empName").textContent = localStorage.getItem("empName") || "未知";
+    document.getElementById("empCode").textContent = localStorage.getItem("empCode") || "未知";
+    document.getElementById("ward").textContent = localStorage.getItem("ward") || "未知";
+  </script>
 
 </body>
 </html>
