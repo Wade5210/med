@@ -1,105 +1,111 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <title>📋 顯示藥單 </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: #f0f9ff;
-            padding: 20px;
-            text-align: center;
-        }
+  <meta charset="UTF-8">
+  <title>📋 顯示藥單</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #f0f9ff;
+      padding: 20px;
+      text-align: center;
+    }
 
-        table {
-            border-collapse: collapse;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 800px;
-            background: white;
-            box-shadow: 0 0 10px #ccc;
-            border-radius: 12px;
-            overflow: hidden;
-        }
+    table {
+      border-collapse: collapse;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 800px;
+      background: white;
+      box-shadow: 0 0 10px #ccc;
+      border-radius: 12px;
+      overflow: hidden;
+    }
 
-        th, td {
-            border: 1px solid #ccc;
-            padding: 12px;
-            text-align: center;
-        }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
 
-        th {
-            background: #1976d2;
-            color: white;
-        }
+    /* ✅ 藥品名稱欄位靠左對齊 */
+    td:nth-child(2) {
+      text-align: left;
+      padding-left: 12px;
+    }
 
-        .btn {
-            background: #2e7d32;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            margin-top: 10px;
-            font-size: 16px;
-            border-radius: 8px;
-        }
+    th {
+      background: #1976d2;
+      color: white;
+    }
 
-        .med-image {
-            width: 60px;
-            border-radius: 6px;
-            cursor: zoom-in;
-        }
+    .btn {
+      background: #2e7d32;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+    }
 
-        #modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0,0,0,0.8);
-        }
+    .med-image {
+      width: 60px;
+      border-radius: 6px;
+      cursor: zoom-in;
+    }
 
-            #modal img {
-                margin-top: 5%;
-                max-width: 90%;
-                max-height: 90%;
-            }
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.8);
+    }
 
-        .cancelled {
-            opacity: 0.5;
-            background-color: #eeeeee;
-        }
-    </style>
+    #modal img {
+      margin-top: 5%;
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .cancelled {
+      opacity: 0.5;
+      background-color: #eeeeee;
+    }
+  </style>
 </head>
 <body>
-    <h2>藥品簽收</h2>
-    <p id="rxInfo"></p>
-    <p id="countDisplay"></p>
+  <h2>藥品簽收</h2>
+  <p id="rxInfo"></p>
+  <p id="countDisplay"></p>
 
-    <table id="resultTable" style="display:none;">
-        <thead>
-            <tr>
-                <th>圖片</th>
-                <th>藥品名稱</th>
-                <th>數量</th>
-                <th>
-                    簽收<br>
-                    <input type="checkbox" id="chkAll" checked onchange="toggleAll(this.checked)">
-                </th>
-            </tr>
-        </thead>
-        <tbody id="medBody"></tbody>
-    </table>
+  <table id="resultTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>圖片</th>
+        <th>藥品名稱</th>
+        <th>數量</th>
+        <th>
+          簽收<br>
+          <input type="checkbox" id="chkAll" checked onchange="toggleAll(this.checked)">
+        </th>
+      </tr>
+    </thead>
+    <tbody id="medBody"></tbody>
+  </table>
 
-    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
 
-    <div id="modal" onclick="this.style.display='none'">
-        <img id="modal-img" src="" alt="放大圖片" />
-    </div>
+  <div id="modal" onclick="this.style.display='none'">
+    <img id="modal-img" src="" alt="放大圖片" />
+  </div>
 
-    <script>
+  <script>
     const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
     const defaultImg = "https://i.imgur.com/POcLxgF.png";
     const params = new URLSearchParams(location.search);
@@ -136,6 +142,7 @@
             <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
           `;
           tbody.appendChild(tr);
+          handleCheckbox(tr.querySelector("input")); // 初始化灰色狀態
         });
 
         table.style.display = "table";
@@ -156,7 +163,7 @@
     function toggleAll(checked) {
       document.querySelectorAll(".chkbox").forEach(cb => {
         cb.checked = checked;
-        handleCheckbox(cb); // 自動更新灰色
+        handleCheckbox(cb);
       });
     }
 
@@ -172,6 +179,6 @@
       modalImg.src = src;
       modal.style.display = "block";
     }
-    </script>
+  </script>
 </body>
 </html>
