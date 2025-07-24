@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>登入 & 選擇掃描裝置</title>
+  <title>登入</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -14,46 +14,6 @@
       padding: 60px 20px;
       margin: 0;
     }
-
-    .hidden {
-      display: none;
-    }
-
-    h2 {
-      font-size: 28px;
-      margin-bottom: 30px;
-    }
-
-    .illustration {
-      width: 140px;
-      margin: 0 auto 40px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 100px;
-      height: 100px;
-      margin: 20px;
-      padding: 0;
-      border: none;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-
-    .btn img {
-      width: 60%;
-    }
-
     .login-container {
       max-width: 360px;
       margin: 0 auto;
@@ -63,19 +23,16 @@
       box-shadow: 0 6px 20px rgba(80,100,120,0.08);
       text-align: left;
     }
-
     .login-title {
       text-align: center;
       margin-bottom: 18px;
     }
-
     .input-label {
       margin: 16px 0 6px 0;
       font-weight: 500;
       font-size: 17px;
       display: block;
     }
-
     .login-input {
       width: 100%;
       padding: 10px 12px;
@@ -86,7 +43,6 @@
       box-sizing: border-box;
       outline: none;
     }
-
     .login-btn {
       display: flex;
       align-items: center;
@@ -104,16 +60,13 @@
       cursor: pointer;
       transition: background 0.3s ease, transform 0.2s ease;
     }
-
     .login-btn:hover {
       background: #ffb09a;
       transform: translateY(-3px);
     }
-
     .login-btn:active {
       transform: scale(0.97);
     }
-
     .error-msg {
       color: #c00;
       text-align: center;
@@ -126,8 +79,7 @@
 </head>
 <body>
 
-  <!-- 登入頁面 -->
-  <div id="loginPage" class="login-container">
+  <div class="login-container">
     <div class="login-title">
       <img src="https://cdn-icons-png.flaticon.com/512/822/822111.png" alt="nurse" style="width:80px;" />
       <h2>請先登入</h2>
@@ -140,22 +92,6 @@
     <div class="error-msg" id="errMsg"></div>
   </div>
 
-  <!-- 掃描選擇頁面 -->
-  <div id="selectPage" class="hidden">
-    <img src="https://cdn-icons-png.flaticon.com/512/822/822111.png" alt="cute nurse illustration" class="illustration" />
-    <h2>請選擇裝置掃描方式</h2>
-
-    <!-- 手機掃描按鈕 -->
-    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'" title="手機掃描">
-      <img src="https://cdn-icons-png.flaticon.com/512/1550/1550324.png" alt="手機掃描" />
-    </button>
-
-    <!-- PDA 掃描按鈕 -->
-    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'" title="PDA 掃描">
-      <img src="https://cdn-icons-png.flaticon.com/512/9536/9536628.png" alt="PDA 掃描" />
-    </button>
-  </div>
-
   <script>
     const USERNAME = "nurse";
     const PASSWORD = "123456";
@@ -164,18 +100,14 @@
       const user = document.getElementById("username").value.trim();
       const pass = document.getElementById("password").value.trim();
       if (user === USERNAME && pass === PASSWORD) {
-        document.getElementById("loginPage").classList.add("hidden");
-        document.getElementById("selectPage").classList.remove("hidden");
-        document.getElementById("errMsg").textContent = "";
+        location.href = "select.html";
       } else {
         document.getElementById("errMsg").textContent = "帳號或密碼錯誤，請重試";
       }
     }
 
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && !document.getElementById("loginPage").classList.contains("hidden")) {
-        login();
-      }
+      if (e.key === "Enter") login();
     });
   </script>
 
