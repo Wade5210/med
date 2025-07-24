@@ -15,21 +15,17 @@
     table {
       border-collapse: collapse;
       margin: 20px auto;
-      width: 90%;
-      max-width: 800px;
+      width: 100%;
       background: white;
       box-shadow: 0 0 10px #ccc;
       border-radius: 12px;
-      overflow: hidden;
+      overflow-x: auto;
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 12px;
-      text-align: center;
-    }
+  border: 1px solid rgba(0,0,0,0.05); /* 超淡的線條 */
+}
 
-    /* ✅ 藥品名稱欄位靠左對齊 */
     td:nth-child(2) {
       text-align: left;
       padding-left: 12px;
@@ -74,30 +70,45 @@
     }
 
     .cancelled {
-      opacity: 0.5;
-      background-color: #eeeeee;
+  background-color: #dcdcdc; 
+  color: #555;              
+  opacity: 1;               
+}
+
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      th, td {
+        font-size: 14px;
+        padding: 8px;
+      }
+
+      .btn {
+        width: 100%;
+        box-sizing: border-box;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>藥品簽收</h2>
   <p id="rxInfo"></p>
   <p id="countDisplay"></p>
 
-  <table id="resultTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>圖片</th>
-        <th>藥品名稱</th>
-        <th>數量</th>
-        <th>
-          簽收<br>
-          <input type="checkbox" id="chkAll" checked onchange="toggleAll(this.checked)">
-        </th>
-      </tr>
-    </thead>
-    <tbody id="medBody"></tbody>
-  </table>
+  <div style="overflow-x:auto;">
+    <table id="resultTable" style="display:none;">
+      
+      <tbody id="medBody"></tbody>
+    </table>
+  </div>
 
   <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
 
@@ -142,7 +153,7 @@
             <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
           `;
           tbody.appendChild(tr);
-          handleCheckbox(tr.querySelector("input")); // 初始化灰色狀態
+          handleCheckbox(tr.querySelector("input"));
         });
 
         table.style.display = "table";
