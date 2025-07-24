@@ -147,11 +147,11 @@
         meds.forEach(med => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td><img src="${med.imageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
-            <td>${med.itemName}</td>
-            <td>${med.totQty}</td>
-            <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
-          `;
+  <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
+  <td>${med.ItemName}</td>
+  <td>${med.TotQty}</td>
+  <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
+`;
           tbody.appendChild(tr);
           handleCheckbox(tr.querySelector("input"));
         });
