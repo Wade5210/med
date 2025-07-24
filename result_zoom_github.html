@@ -82,19 +82,20 @@
 
     .btn {
       display: inline-block;
-      padding: 10px 20px;
-      background: #2e7d32;
+      padding: 12px 24px;
+      background: #ff7b7b;
       color: white;
-      font-size: 16px;
+      font-size: 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: 16px;
       cursor: pointer;
       margin: 16px auto;
       display: block;
+      font-weight: bold;
     }
 
     .btn:hover {
-      background: #1b5e20;
+      background: #e06464;
     }
 
     #modal {
@@ -128,6 +129,10 @@
       .checkbox-area {
         align-self: flex-end;
       }
+
+      .btn {
+        width: 90%;
+      }
     }
   </style>
 </head>
@@ -138,6 +143,8 @@
   <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
 
   <div class="card-container" id="cardContainer"></div>
+
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
 
   <div id="modal" onclick="this.style.display='none'">
     <img id="modal-img" src="" alt="放大圖片" />
