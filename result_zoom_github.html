@@ -1,100 +1,100 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>📋 顯示藥單</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <title>藥品簽收</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
       background: #f0f9ff;
+      margin: 0;
       padding: 20px;
+    }
+
+    #rxInfo, #countDisplay {
       text-align: center;
+      font-size: 18px;
+      margin: 10px 0;
     }
 
-    table {
-      border-collapse: collapse;
-      margin: 20px auto;
-      width: 100%;
-      background: white;
-      box-shadow: 0 0 10px #ccc;
-      border-radius: 12px;
-      overflow-x: auto;
+    .card-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
-    th, td {
-  border: 1px solid rgba(0,0,0,0.05); /* 超淡的線條 */
-}
-
-    td:nth-child(2) {
-      text-align: left;
-      padding-left: 12px;
+    .med-card {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 95%;
+      max-width: 600px;
+      padding: 12px 16px;
+      box-sizing: border-box;
     }
 
-    th {
-      background: #1976d2;
-      color: white;
-    }
-
-    .btn {
-      background: #2e7d32;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-    }
-
-    .med-image {
+    .med-card img {
       width: 60px;
-      border-radius: 6px;
-      cursor: zoom-in;
+      height: 60px;
+      border-radius: 10px;
+      object-fit: cover;
+      margin-right: 16px;
     }
 
-    #modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0,0,0,0.8);
+    .med-info {
+      flex-grow: 1;
+      text-align: left;
     }
 
-    #modal img {
-      margin-top: 5%;
-      max-width: 90%;
-      max-height: 90%;
+    .med-info p {
+      margin: 4px 0;
+      font-size: 16px;
+    }
+
+    .checkbox-area {
+      display: flex;
+      align-items: center;
     }
 
     .cancelled {
-  background-color: #dcdcdc; 
-  color: #555;              
-  opacity: 1;               
-}
+      background-color: #e0e0e0;
+      opacity: 0.6;
+    }
 
-    
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
+    .btn {
+      background: #ff69b4;
+      color: white;
+      font-size: 18px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 24px;
+      cursor: pointer;
+      display: block;
+      margin: 0 auto;
+      box-shadow: 0 4px 10px rgba(255,105,180,0.4);
+    }
+
+    .btn:hover {
+      background: #ff489f;
+    }
+
+    @media (max-width: 600px) {
+      .med-card {
+        flex-direction: column;
+        align-items: flex-start;
       }
 
-      table {
-        width: 95%;
-        border-radius: 0;
-        box-shadow: none;
+      .med-card img {
+        margin-bottom: 8px;
       }
 
-      th, td {
-        font-size: 14px;
-        padding: 8px;
-      }
-
-      .btn {
-        width: 40%;
-        box-sizing: border-box;
+      .checkbox-area {
+        align-self: flex-end;
       }
     }
   </style>
@@ -102,19 +102,8 @@
 <body>
   <p id="rxInfo"></p>
   <p id="countDisplay"></p>
-
-  <div style="overflow-x:auto;">
-    <table id="resultTable" style="display:none;">
-      
-      <tbody id="medBody"></tbody>
-    </table>
-  </div>
-
-  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
-
-  <div id="modal" onclick="this.style.display='none'">
-    <img id="modal-img" src="" alt="放大圖片" />
-  </div>
+  <div class="card-container" id="medBody"></div>
+  <button class="btn" onclick="location.href='scan_zoom_github.html'">🔄 繼續掃描</button>
 
   <script>
     const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
@@ -137,58 +126,50 @@
       .then(res => res.json())
       .then(data => {
         const meds = data?.content?.drugList;
-        const tbody = document.getElementById("medBody");
-        const table = document.getElementById("resultTable");
+        const container = document.getElementById("medBody");
         if (!meds || meds.length === 0) {
           alert("❌ 查無資料");
           return;
         }
 
         meds.forEach(med => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-  <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
-  <td>${med.ItemName}</td>
-  <td>${med.TotQty}</td>
-  <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
-`;
-          tbody.appendChild(tr);
-          handleCheckbox(tr.querySelector("input"));
+          const card = document.createElement("div");
+          card.className = "med-card";
+
+          card.innerHTML = `
+            <img src="${med.ImageUrl}" onerror="this.src='${defaultImg}'" alt="藥品圖片">
+            <div class="med-info">
+              <p><strong>${med.ItemName}</strong></p>
+              <p>${med.DoseUnit}</p>
+              <p>數量：${med.TotQty}</p>
+            </div>
+            <div class="checkbox-area">
+              <input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked>
+            </div>
+          `;
+
+          container.appendChild(card);
+          handleCheckbox(card.querySelector("input"));
         });
 
-        table.style.display = "table";
         updateCount();
       });
     }
 
     function handleCheckbox(cb) {
-      const tr = cb.closest("tr");
+      const card = cb.closest(".med-card");
       if (cb.checked) {
-        tr.classList.remove("cancelled");
+        card.classList.remove("cancelled");
       } else {
-        tr.classList.add("cancelled");
+        card.classList.add("cancelled");
       }
       updateCount();
-    }
-
-    function toggleAll(checked) {
-      document.querySelectorAll(".chkbox").forEach(cb => {
-        cb.checked = checked;
-        handleCheckbox(cb);
-      });
     }
 
     function updateCount() {
       const all = document.querySelectorAll(".chkbox").length;
       const checked = document.querySelectorAll(".chkbox:checked").length;
       document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
-    }
-
-    function zoomImage(src) {
-      const modal = document.getElementById("modal");
-      const modalImg = document.getElementById("modal-img");
-      modalImg.src = src;
-      modal.style.display = "block";
     }
   </script>
 </body>
