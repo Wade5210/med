@@ -2,85 +2,117 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>藥品簽收</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📋 顯示藥單（卡片版）</title>
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
-      background: #f0f9ff;
+      background: #e3f2fd;
+      padding: 10px;
       margin: 0;
-      padding: 20px;
     }
 
-    #rxInfo, #countDisplay {
+    .info {
       text-align: center;
+      margin: 12px 0;
       font-size: 18px;
-      margin: 10px 0;
+    }
+
+    .count {
+      font-weight: bold;
+      color: #2e7d32;
     }
 
     .card-container {
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 16px;
-      margin-bottom: 20px;
+      margin: 20px auto;
+      max-width: 960px;
     }
 
     .med-card {
-      display: flex;
-      align-items: center;
       background: #fff;
       border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 95%;
-      max-width: 600px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 300px;
+      max-width: 420px;
+      flex: 1 1 45%;
       box-sizing: border-box;
+      position: relative;
+    }
+
+    .med-card.cancelled {
+      background-color: #e0e0e0;
+      opacity: 1;
     }
 
     .med-card img {
-      width: 60px;
-      height: 60px;
-      border-radius: 10px;
-      object-fit: cover;
-      margin-right: 16px;
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 8px;
+      cursor: zoom-in;
     }
 
     .med-info {
-      flex-grow: 1;
+      flex: 1;
       text-align: left;
     }
 
-    .med-info p {
-      margin: 4px 0;
-      font-size: 16px;
+    .med-info .name {
+      font-weight: bold;
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
+
+    .med-info .qty {
+      font-size: 15px;
+      color: #555;
     }
 
     .checkbox-area {
-      display: flex;
-      align-items: center;
-    }
-
-    .cancelled {
-      background-color: #e0e0e0;
-      opacity: 0.6;
+      align-self: flex-start;
     }
 
     .btn {
-      background: #ff69b4;
+      display: inline-block;
+      padding: 10px 20px;
+      background: #2e7d32;
       color: white;
-      font-size: 18px;
-      padding: 12px 24px;
+      font-size: 16px;
       border: none;
-      border-radius: 24px;
+      border-radius: 10px;
       cursor: pointer;
+      margin: 16px auto;
       display: block;
-      margin: 0 auto;
-      box-shadow: 0 4px 10px rgba(255,105,180,0.4);
     }
 
     .btn:hover {
-      background: #ff489f;
+      background: #1b5e20;
+    }
+
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.8);
+    }
+
+    #modal img {
+      display: block;
+      margin: 5% auto;
+      max-width: 90%;
+      max-height: 90%;
     }
 
     @media (max-width: 600px) {
@@ -100,10 +132,16 @@
   </style>
 </head>
 <body>
-  <p id="rxInfo"></p>
-  <p id="countDisplay"></p>
-  <div class="card-container" id="medBody"></div>
-  <button class="btn" onclick="location.href='scan_zoom_github.html'">🔄 繼續掃描</button>
+
+  <div class="info" id="rxInfo"></div>
+  <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
+  <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
+
+  <div class="card-container" id="cardContainer"></div>
+
+  <div id="modal" onclick="this.style.display='none'">
+    <img id="modal-img" src="" alt="放大圖片" />
+  </div>
 
   <script>
     const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
@@ -111,12 +149,12 @@
     const params = new URLSearchParams(location.search);
     const ward = params.get("ward");
     const barcode = params.get("barcode");
+    let allChecked = true;
 
     if (!ward || !barcode) {
       alert("缺少參數，請從掃描頁進入");
     } else {
       document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>`;
-
       fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`, {
         headers: {
           Authorization: token,
@@ -125,9 +163,9 @@
       })
       .then(res => res.json())
       .then(data => {
-        const meds = data?.content?.drugList;
-        const container = document.getElementById("medBody");
-        if (!meds || meds.length === 0) {
+        const meds = data?.content?.drugList || [];
+        const container = document.getElementById("cardContainer");
+        if (meds.length === 0) {
           alert("❌ 查無資料");
           return;
         }
@@ -136,40 +174,66 @@
           const card = document.createElement("div");
           card.className = "med-card";
 
-          card.innerHTML = `
-            <img src="${med.ImageUrl}" onerror="this.src='${defaultImg}'" alt="藥品圖片">
-            <div class="med-info">
-              <p><strong>${med.ItemName}</strong></p>
-              <p>${med.DoseUnit}</p>
-              <p>數量：${med.TotQty}</p>
-            </div>
-            <div class="checkbox-area">
-              <input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked>
-            </div>
+          const img = document.createElement("img");
+          img.src = med.ImageUrl;
+          img.onerror = () => img.src = defaultImg;
+          img.onclick = () => zoomImage(img.src);
+
+          const info = document.createElement("div");
+          info.className = "med-info";
+          info.innerHTML = `
+            <div class="name">${med.ItemName}</div>
+            <div class="qty">數量：${med.TotQty} ${med.DoseUnit}</div>
           `;
 
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "chkbox";
+          checkbox.checked = true;
+          checkbox.onchange = () => handleCheckbox(card, checkbox);
+
+          const checkWrap = document.createElement("div");
+          checkWrap.className = "checkbox-area";
+          checkWrap.appendChild(checkbox);
+
+          card.appendChild(img);
+          card.appendChild(info);
+          card.appendChild(checkWrap);
+
           container.appendChild(card);
-          handleCheckbox(card.querySelector("input"));
+          handleCheckbox(card, checkbox);
         });
 
         updateCount();
       });
     }
 
-    function handleCheckbox(cb) {
-      const card = cb.closest(".med-card");
-      if (cb.checked) {
-        card.classList.remove("cancelled");
-      } else {
-        card.classList.add("cancelled");
-      }
+    function handleCheckbox(card, checkbox) {
+      card.classList.toggle("cancelled", !checkbox.checked);
       updateCount();
     }
 
     function updateCount() {
-      const all = document.querySelectorAll(".chkbox").length;
+      const total = document.querySelectorAll(".chkbox").length;
       const checked = document.querySelectorAll(".chkbox:checked").length;
-      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
+      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${total}`;
+    }
+
+    function toggleAll() {
+      const boxes = document.querySelectorAll(".chkbox");
+      allChecked = !allChecked;
+      document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
+      boxes.forEach(cb => {
+        cb.checked = allChecked;
+        handleCheckbox(cb.closest(".med-card"), cb);
+      });
+    }
+
+    function zoomImage(src) {
+      const modal = document.getElementById("modal");
+      const modalImg = document.getElementById("modal-img");
+      modalImg.src = src;
+      modal.style.display = "block";
     }
   </script>
 </body>
