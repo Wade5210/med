@@ -88,26 +88,33 @@
       const userID = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
 
-      const res = await fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ userID, password })
-      });
+      try {
+        const res = await fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ userID, password })
+        });
 
-      if (!res.ok) {
-        document.getElementById("errMsg").textContent = "❌ 帳號或密碼錯誤";
-        return;
+        const result = await res.json();
+
+        if (!res.ok || !result.content) {
+          throw new Error("登入失敗");
+        }
+
+        // 儲存資訊到 localStorage
+        localStorage.setItem("token", "Bearer " + result.token);
+        localStorage.setItem("ward", result.content.ward);
+        localStorage.setItem("empCode", result.content.empCode);
+        localStorage.setItem("empName", result.content.empName);
+
+        // 跳轉
+        window.location.href = "scan_selector.html";
+
+      } catch (err) {
+        document.getElementById("errMsg").textContent = "❌ 登入失敗，請確認帳密是否正確";
       }
-
-      const result = await res.json();
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("ward", result.ward);
-      localStorage.setItem("empCode", result.empCode);
-      localStorage.setItem("empName", result.empName);
-
-      window.location.href = "scan_selector.html";
     }
 
     document.addEventListener("keydown", e => {
