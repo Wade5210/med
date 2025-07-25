@@ -107,26 +107,53 @@
       max-height: 90%;
     }
     @media (max-width: 600px) {
-      .med-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .med-card img {
-        margin-bottom: 8px;
-      }
-      .checkbox-area {
-        align-self: flex-end;
-      }
-      .checkbox-area input[type="checkbox"] {
-        width: 24px;
-        height: 24px;
-        transform: scale(1.4);
-        cursor: pointer;
-      }
-      .btn {
-        width: 90%;
-      }
-    }
+  .med-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .med-card img {
+    width: 64px;
+    height: 64px;
+    margin-right: 12px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  .med-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    text-align: left;
+    gap: 10px;
+  }
+
+  .med-info .name {
+    font-size: 16px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .med-info .qty {
+    font-size: 14px;
+    color: #555;
+    white-space: nowrap;
+  }
+
+  .checkbox-area {
+    margin-left: 8px;
+  }
+
+  .checkbox-area input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    transform: scale(1.2);
+    cursor: pointer;
+  }
+}
+
   </style>
 </head>
 <body>
