@@ -104,7 +104,7 @@
         }
 
         // 儲存資訊到 localStorage
-        localStorage.setItem("token", "Bearer " + result.token);
+        localStorage.setItem("token", "Bearer " + result.content.token);
         localStorage.setItem("ward", result.content.ward);
         localStorage.setItem("empCode", result.content.empCode);
         localStorage.setItem("empName", result.content.empName);
