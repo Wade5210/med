@@ -20,6 +20,12 @@
       font-weight: bold;
       color: #2e7d32;
     }
+    .error-msg {
+      color: red;
+      font-size: 20px;
+      text-align: center;
+      margin-top: 20px;
+    }
     .card-container {
       display: flex;
       flex-wrap: wrap;
@@ -127,6 +133,7 @@
 
   <div class="info" id="rxInfo"></div>
   <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
+  <div class="error-msg" id="errorMsg"></div>
 
   <div class="card-container" id="cardContainer"></div>
   <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
@@ -158,10 +165,17 @@
       })
       .then(res => res.json())
       .then(data => {
-        const meds = data?.content || [];
         const container = document.getElementById("cardContainer");
+        const errorBox = document.getElementById("errorMsg");
+
+        if (typeof data.content === "string") {
+          errorBox.textContent = "⚠️ " + data.content;
+          return;
+        }
+
+        const meds = data?.content?.drugList || [];
         if (meds.length === 0) {
-          alert("❌ 查無藥品資料");
+          errorBox.textContent = "❌ 查無藥品資料";
           return;
         }
 
