@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📷 掃描醫囑條碼 </title>
+  <title>📷 掃描醫囑條碼</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     html, body {
@@ -24,13 +24,6 @@
       z-index: 10;
       font-size: 18px;
     }
-    select {
-      font-size: 16px;
-      padding: 6px;
-      border-radius: 6px;
-      border: none;
-      margin-top: 5px;
-    }
     .btn {
       position: absolute;
       bottom: 20px;
@@ -49,13 +42,6 @@
 <body>
   <div class="overlay">
     <div>請掃描醫囑條碼</div>
-    <select id="wardSelect">
-      <option value="N9">N9</option>
-      <option value="N10">N10</option>
-      <option value="N11">N11</option>
-      <option value="N12">N12</option>
-      <option value="N13" selected>N13</option>
-    </select>
   </div>
   <div id="reader"></div>
 
@@ -66,8 +52,12 @@
 
     function onScanSuccess(decodedText, decodedResult) {
       reader.stop().then(() => {
-        const ward = document.getElementById("wardSelect").value;
-        const url = `https://wade5210.github.io/med/result_zoom_github.html?ward=${encodeURIComponent(ward)}&barcode=${encodeURIComponent(decodedText)}`;
+        const ward = localStorage.getItem("ward");
+        if (!ward) {
+          alert("⚠️ 找不到護理站資訊，請重新登入");
+          return;
+        }
+        const url = `https://wade5210.github.io/med/result_zoom_github.html?barcode=${encodeURIComponent(decodedText)}`;
         window.location.href = url;
       });
     }
