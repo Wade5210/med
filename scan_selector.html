@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📷 選擇掃描方式</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet" />
   <style>
@@ -32,7 +32,6 @@
       font-size: 16px;
       line-height: 1.6;
     }
- 
 
     .btn-container {
       display: flex;
@@ -67,25 +66,32 @@
       margin-bottom: 8px;
     }
 
-    .logout-container {
-      margin-top: auto;
-      padding: 20px 0;
+    .logout-btn {
+      margin-top: 40px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: #f44336;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      cursor: pointer;
     }
 
-    .logout-btn {
-      background: #f44336;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
+    .logout-btn:hover {
+      background: #d32f2f;
     }
 
     @media (max-width: 600px) {
       .btn-container {
+        display: flex;
         gap: 20px;
         justify-content: center;
+      }
+
+      .logout-btn {
+        width: 90%;
       }
     }
   </style>
@@ -95,7 +101,9 @@
   <h2>請選擇掃描方式</h2>
 
   <div class="info-box">
-     使用者：<span id="empName">-</span>（<span id="empCode">-</span>）<br> ID：<span id="empNO">-</span><br> 護理站：<span id="ward">-</span>
+    使用者：<span id="empName">-</span>（<span id="empCode">-</span>）<br>
+    ID：<span id="empNO">-</span><br>
+    護理站：<span id="ward">-</span>
   </div>
 
   <div class="btn-container">
@@ -105,23 +113,24 @@
     </button>
     <button class="scan-btn" onclick="location.href='scan_pda_github.html'">
       <img src="https://cdn-icons-png.flaticon.com/512/1550/1550324.png" alt="pda" />
-      掃描器掃描
+      PDA 掃描
     </button>
   </div>
 
-  <div class="logout-container">
-    <button class="logout-btn" onclick="logout()"> 退出登入</button>
-  </div>
+  <!-- 🔓 退出登入按鈕 -->
+  <button class="logout-btn" onclick="logout()">🔓 退出登入</button>
 
   <script>
+    // 顯示使用者資訊
     document.getElementById("empName").textContent = localStorage.getItem("empName") || "未知";
     document.getElementById("empCode").textContent = localStorage.getItem("empCode") || "未知";
     document.getElementById("empNO").textContent = localStorage.getItem("empNo") || "未知";
     document.getElementById("ward").textContent = localStorage.getItem("ward") || "未知";
 
+    // 登出功能
     function logout() {
       localStorage.clear();
-      window.location.href = "home.html";
+      location.href = "index.html"; // 返回登入頁
     }
   </script>
 
