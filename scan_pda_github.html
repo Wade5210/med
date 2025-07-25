@@ -11,7 +11,7 @@
       padding: 40px;
       text-align: center;
     }
-    select, input {
+    input {
       font-size: 24px;
       padding: 12px;
       width: 80%;
@@ -43,15 +43,6 @@
 <body>
   <h2>請使用 PDA 掃描藥單條碼</h2>
 
-  <!-- 護理站下拉選單 -->
-  <select id="wardSelect">
-    <option value="N9">N9</option>
-    <option value="N10">N10</option>
-    <option value="N11">N11</option>
-    <option value="N12">N12</option>
-    <option value="N13" selected>N13</option>
-  </select>
-
   <!-- 條碼掃描輸入 -->
   <input type="text" id="barcodeInput" placeholder="請掃描條碼..." autofocus />
 
@@ -60,15 +51,16 @@
 
   <script>
     const input = document.getElementById("barcodeInput");
-    const wardSelect = document.getElementById("wardSelect");
 
     input.addEventListener("keyup", function (e) {
       if (e.key === "Enter" || input.value.length >= 5) {
         const barcode = encodeURIComponent(input.value.trim());
-        const ward = encodeURIComponent(wardSelect.value);
-        if (barcode && ward) {
-          location.href = `https://wade5210.github.io/med/result_zoom_pda_github.html?ward=${ward}&barcode=${barcode}`;
+        const ward = localStorage.getItem("ward");
+        if (!ward) {
+          alert("⚠️ 找不到護理站資訊，請重新登入");
+          return;
         }
+        location.href = `https://wade5210.github.io/med/result_zoom_pda_github.html?barcode=${barcode}`;
       }
     });
   </script>
