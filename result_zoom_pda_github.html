@@ -11,18 +11,15 @@
       padding: 10px;
       margin: 0;
     }
-
     .info {
       text-align: center;
       margin: 12px 0;
       font-size: 18px;
     }
-
     .count {
       font-weight: bold;
       color: #2e7d32;
     }
-
     .card-container {
       display: flex;
       flex-wrap: wrap;
@@ -31,7 +28,6 @@
       margin: 20px auto;
       max-width: 960px;
     }
-
     .med-card {
       background: #fff;
       border-radius: 16px;
@@ -46,12 +42,9 @@
       box-sizing: border-box;
       position: relative;
     }
-
     .med-card.cancelled {
       background-color: #e0e0e0;
-      opacity: 1;
     }
-
     .med-card img {
       width: 64px;
       height: 64px;
@@ -59,31 +52,26 @@
       border-radius: 8px;
       cursor: zoom-in;
     }
-
     .med-info {
       flex: 1;
       text-align: left;
     }
-
     .med-info .name {
       font-weight: bold;
       font-size: 17px;
       margin-bottom: 4px;
     }
-
     .med-info .qty {
       font-size: 15px;
       color: #555;
     }
-
     .checkbox-area {
       align-self: flex-start;
     }
-
     .btn {
       display: inline-block;
       padding: 12px 24px;
-      background: #de58f0;;
+      background: #de58f0;
       color: white;
       font-size: 18px;
       border: none;
@@ -93,11 +81,9 @@
       display: block;
       font-weight: bold;
     }
-
     .btn:hover {
       background: #de58f0;
     }
-
     #modal {
       display: none;
       position: fixed;
@@ -108,36 +94,29 @@
       height: 100vh;
       background-color: rgba(0,0,0,0.8);
     }
-
     #modal img {
       display: block;
       margin: 5% auto;
       max-width: 90%;
       max-height: 90%;
     }
-
     @media (max-width: 600px) {
       .med-card {
         flex-direction: column;
         align-items: flex-start;
       }
-
       .med-card img {
         margin-bottom: 8px;
       }
-
       .checkbox-area {
         align-self: flex-end;
       }
-      
       .checkbox-area input[type="checkbox"] {
-      width: 24px;
-      height: 24px;
-      transform: scale(1.4);
-      cursor: pointer;
+        width: 24px;
+        height: 24px;
+        transform: scale(1.4);
+        cursor: pointer;
       }
-
-
       .btn {
         width: 90%;
       }
@@ -148,7 +127,6 @@
 
   <div class="info" id="rxInfo"></div>
   <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
-  
 
   <div class="card-container" id="cardContainer"></div>
   <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
@@ -159,18 +137,20 @@
   </div>
 
   <script>
-    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    const token = localStorage.getItem("token");
+    const ward = localStorage.getItem("ward");
+    const empCode = localStorage.getItem("empCode");
+    const barcode = new URLSearchParams(location.search).get("barcode");
     const defaultImg = "https://i.imgur.com/POcLxgF.png";
-    const params = new URLSearchParams(location.search);
-    const ward = params.get("ward");
-    const barcode = params.get("barcode");
     let allChecked = true;
 
-    if (!ward || !barcode) {
-      alert("缺少參數，請從掃描頁進入");
+    if (!token || !ward || !empCode || !barcode) {
+      alert("❌ 資料不足，請重新登入或掃描");
     } else {
-      document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>`;
-      fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}`, {
+      document.getElementById("rxInfo").innerHTML =
+        `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
+
+      fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
         headers: {
           Authorization: token,
           Accept: "application/json"
@@ -178,10 +158,10 @@
       })
       .then(res => res.json())
       .then(data => {
-        const meds = data?.content?.drugList || [];
+        const meds = data?.content || [];
         const container = document.getElementById("cardContainer");
         if (meds.length === 0) {
-          alert("❌ 查無資料");
+          alert("❌ 查無藥品資料");
           return;
         }
 
