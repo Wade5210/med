@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -88,6 +89,7 @@
 <body>
   <p id="rxInfo"></p>
   <p id="countDisplay"></p>
+<p id="apiMessage" style="color:red; font-weight:bold;"></p>
 
   <div style="overflow-x:auto;">
     <table id="resultTable" style="display:none;">
@@ -126,7 +128,7 @@
         const tbody = document.getElementById("medBody");
         const table = document.getElementById("resultTable");
         if (meds.length === 0) {
-          alert("❌ 查無藥品資料");
+          document.getElementById("apiMessage").textContent = data?.content || "❌ 查無藥品資料";
           return;
         }
 
