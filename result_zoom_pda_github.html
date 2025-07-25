@@ -173,7 +173,7 @@
           return;
         }
 
-        const meds = data?.content?.drugList || [];
+        const meds = Array.isArray(data?.content) ? data.content : [];
         if (meds.length === 0) {
           errorBox.textContent = "❌ 查無藥品資料";
           return;
