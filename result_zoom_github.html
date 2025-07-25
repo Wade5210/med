@@ -122,7 +122,7 @@
       })
       .then(res => res.json())
       .then(data => {
-        const meds = data?.content?.drugList || [];
+        const meds = data?.content || [];
         const tbody = document.getElementById("medBody");
         const table = document.getElementById("resultTable");
         if (meds.length === 0) {
