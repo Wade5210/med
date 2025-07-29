@@ -90,6 +90,13 @@
     .btn:hover {
       background: #de58f0;
     }
+     .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
     #modal {
       display: none;
       position: fixed;
@@ -163,8 +170,11 @@
   <div class="error-msg" id="errorMsg"></div>
 
   <div class="card-container" id="cardContainer"></div>
+<div class="btn-row">
   <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
   <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
+</div>
+
 
   <div id="modal" onclick="this.style.display='none'">
     <img id="modal-img" src="" alt="放大圖片" />
