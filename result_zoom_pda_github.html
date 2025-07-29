@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 顯示藥單（卡片版）</title>
+  <title>📋 顯示藥單（橫向卡片）</title>
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -11,46 +11,51 @@
       padding: 10px;
       margin: 0;
     }
+
     .info {
       text-align: center;
       margin: 12px 0;
       font-size: 18px;
     }
+
     .count {
       font-weight: bold;
       color: #2e7d32;
     }
+
     .error-msg {
       color: red;
       font-size: 20px;
       text-align: center;
       margin-top: 20px;
     }
+
     .card-container {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16px;
-      margin: 20px auto;
-      max-width: 960px;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 720px;
+      margin: 0 auto;
     }
+
     .med-card {
+      display: grid;
+      grid-template-columns: 64px 1fr 80px 40px;
+      align-items: center;
+      gap: 16px;
+
       background: #fff;
       border-radius: 16px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      min-width: 300px;
-      max-width: 420px;
-      flex: 1 1 45%;
       box-sizing: border-box;
       position: relative;
     }
+
     .med-card.cancelled {
       background-color: #e0e0e0;
     }
+
     .med-card img {
       width: 64px;
       height: 64px;
@@ -58,24 +63,39 @@
       border-radius: 8px;
       cursor: zoom-in;
     }
+
     .med-info {
-      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
       text-align: left;
     }
+
     .med-info .name {
-      font-weight: bold;
       font-size: 17px;
-      margin-bottom: 4px;
+      font-weight: bold;
     }
+
     .med-info .qty {
       font-size: 15px;
       color: #555;
     }
+
     .checkbox-area {
-      align-self: flex-start;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
     .btn {
-      display: inline-block;
       padding: 12px 24px;
       background: #de58f0;
       color: white;
@@ -83,18 +103,11 @@
       border: none;
       border-radius: 16px;
       cursor: pointer;
-      margin: 16px auto;
-      display: block;
       font-weight: bold;
     }
+
     .btn:hover {
-      background: #de58f0;
-    }
-     .btn-row {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin: 24px 0;
+      background: #b23fc7;
     }
 
     #modal {
@@ -107,60 +120,13 @@
       height: 100vh;
       background-color: rgba(0,0,0,0.8);
     }
+
     #modal img {
       display: block;
       margin: 5% auto;
       max-width: 90%;
       max-height: 90%;
     }
-    @media (max-width: 600px) {
-  .med-card {
-    flex-direction: row;
-    align-items: center;
-    padding: 10px;
-  }
-
-  .med-card img {
-    width: 64px;
-    height: 64px;
-    margin-right: 12px;
-    border-radius: 8px;
-    object-fit: contain;
-  }
-
-  .med-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex: 1;
-    text-align: left;
-    gap: 10px;
-  }
-
-  .med-info .name {
-    font-size: 16px;
-    font-weight: bold;
-    white-space: nowrap;
-  }
-
-  .med-info .qty {
-    font-size: 14px;
-    color: #555;
-    white-space: nowrap;
-  }
-
-  .checkbox-area {
-    margin-left: 8px;
-  }
-
-  .checkbox-area input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    transform: scale(1.2);
-    cursor: pointer;
-  }
-}
-
   </style>
 </head>
 <body>
@@ -170,11 +136,11 @@
   <div class="error-msg" id="errorMsg"></div>
 
   <div class="card-container" id="cardContainer"></div>
-<div class="btn-row">
-  <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
-  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
-</div>
 
+  <div class="btn-row">
+    <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
+    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
+  </div>
 
   <div id="modal" onclick="this.style.display='none'">
     <img id="modal-img" src="" alt="放大圖片" />
@@ -232,6 +198,10 @@
             <div class="qty">數量：${med.TotQty} ${med.DoseUnit}</div>
           `;
 
+          const qtyOnly = document.createElement("div");
+          qtyOnly.style.textAlign = "center";
+          qtyOnly.innerHTML = `<strong>${Number(med.TotQty).toFixed(3)}</strong>`;
+
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.className = "chkbox";
@@ -244,6 +214,7 @@
 
           card.appendChild(img);
           card.appendChild(info);
+          card.appendChild(qtyOnly);
           card.appendChild(checkWrap);
 
           container.appendChild(card);
