@@ -186,6 +186,7 @@
         meds.forEach(med => {
           const card = document.createElement("div");
           card.className = "med-card";
+          card.dataset.code = med.ItemNo;
 
           const img = document.createElement("img");
           img.src = med.ImageUrl;
@@ -226,6 +227,32 @@
     function handleCheckbox(card, checkbox) {
       card.classList.toggle("cancelled", !checkbox.checked);
       updateCount();
+
+      if (!checkbox.checked) {
+        const itemCode = card.dataset.code;
+        const body = {
+          BarCode: barcode,
+          ItemCode: itemCode,
+          SignUser: empCode
+        };
+
+        fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
+          method: "POST",
+          headers: {
+            Authorization: token,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        })
+        .then(res => res.json())
+        .then(result => {
+          console.log("✅ 已取消簽收：", result);
+        })
+        .catch(err => {
+          console.error("❌ 取消簽收失敗：", err);
+        });
+      }
     }
 
     function updateCount() {
