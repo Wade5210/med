@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -11,7 +12,6 @@
       padding: 20px;
       text-align: center;
     }
-
     table {
       border-collapse: collapse;
       margin: 20px auto;
@@ -19,23 +19,18 @@
       background: white;
       box-shadow: 0 0 10px #ccc;
       border-radius: 12px;
-      overflow-x: auto;
     }
-
     th, td {
       border: 1px solid rgba(0,0,0,0.05);
     }
-
     td:nth-child(2) {
       text-align: left;
       padding-left: 12px;
     }
-
     th {
       background: #1976d2;
       color: white;
     }
-
     .btn {
       background: #2e7d32;
       color: white;
@@ -45,13 +40,11 @@
       font-size: 16px;
       border-radius: 8px;
     }
-
     .med-image {
       width: 60px;
       border-radius: 6px;
       cursor: zoom-in;
     }
-
     #modal {
       display: none;
       position: fixed;
@@ -62,45 +55,19 @@
       height: 100vh;
       background-color: rgba(0,0,0,0.8);
     }
-
     #modal img {
       margin-top: 5%;
       max-width: 90%;
       max-height: 90%;
     }
-
     .cancelled {
       background-color: #dcdcdc;
       color: #555;
-      opacity: 1;
     }
-
     #errorBox {
       color: red;
       font-size: 18px;
       margin: 10px;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-
-      table {
-        width: 98%;
-        border-radius: 0;
-        box-shadow: none;
-      }
-
-      th, td {
-        font-size: 20px;
-        padding: 8px;
-      }
-
-      .btn {
-        width: 40%;
-        box-sizing: border-box;
-      }
     }
   </style>
 </head>
@@ -122,78 +89,108 @@
     <img id="modal-img" src="" alt="放大圖片" />
   </div>
 
-  <script>
-    const defaultImg = "https://i.imgur.com/POcLxgF.png";
-    const params = new URLSearchParams(location.search);
-    const barcode = params.get("barcode");
-    const token = localStorage.getItem("token");
-    const ward = localStorage.getItem("ward");
-    const empCode = localStorage.getItem("empCode");
+<script>
+  const defaultImg = "https://i.imgur.com/POcLxgF.png";
+  const params = new URLSearchParams(location.search);
+  const barcode = params.get("barcode");
+  const token = localStorage.getItem("token");
+  const ward = localStorage.getItem("ward");
+  const empCode = localStorage.getItem("empCode");
 
-    if (!ward || !barcode || !token || !empCode) {
-      document.getElementById("errorBox").textContent = "❌ 缺少必要資訊，請重新登入或掃描";
-    } else {
-      document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
+  if (!ward || !barcode || !token || !empCode) {
+    document.getElementById("errorBox").textContent = "❌ 缺少必要資訊，請重新登入或掃描";
+  } else {
+    document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
 
-      fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+    fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+      headers: {
+        Authorization: token,
+        Accept: "application/json"
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("medBody");
+      const table = document.getElementById("resultTable");
+
+      if (typeof data.content === "string") {
+        document.getElementById("errorBox").textContent = "⚠️ " + data.content;
+        return;
+      }
+
+      const meds = Array.isArray(data?.content) ? data.content : [];
+
+      if (meds.length === 0) {
+        document.getElementById("errorBox").textContent = "❌ 查無藥品資料";
+        return;
+      }
+
+      meds.forEach(med => {
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-code", med.ItemNo);  // 綁定藥品代碼
+
+        tr.innerHTML = `
+          <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
+          <td>${med.ItemName}</td>
+          <td>${med.TotQty}</td>
+          <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
+        `;
+
+        tbody.appendChild(tr);
+        handleCheckbox(tr.querySelector("input"));
+      });
+
+      table.style.display = "table";
+      updateCount();
+    })
+    .catch(() => {
+      document.getElementById("errorBox").textContent = "❌ 藥品資料載入失敗，請稍後再試";
+    });
+  }
+
+  function handleCheckbox(cb) {
+    const tr = cb.closest("tr");
+    tr.classList.toggle("cancelled", !cb.checked);
+    updateCount();
+
+    if (!cb.checked) {
+      const itemCode = tr.getAttribute("data-code");
+
+      const body = {
+        BarCode: barcode,
+        ItemCode: itemCode,
+        SignUser: empCode
+      };
+
+      fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
+        method: "POST",
         headers: {
           Authorization: token,
-          Accept: "application/json"
-        }
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
       })
       .then(res => res.json())
-      .then(data => {
-        const tbody = document.getElementById("medBody");
-        const table = document.getElementById("resultTable");
-
-        if (typeof data.content === "string") {
-          document.getElementById("errorBox").textContent = "⚠️ " + data.content;
-          return;
-        }
-
-        const meds = Array.isArray(data?.content) ? data.content : [];
-
-        if (meds.length === 0) {
-          document.getElementById("errorBox").textContent = "❌ 查無藥品資料";
-          return;
-        }
-
-        meds.forEach(med => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
-            <td>${med.ItemName}</td>
-            <td>${med.TotQty}</td>
-            <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
-          `;
-          tbody.appendChild(tr);
-          handleCheckbox(tr.querySelector("input"));
-        });
-
-        table.style.display = "table";
-        updateCount();
+      .then(result => {
+        console.log("✅ 已取消簽收：", result);
       })
       .catch(err => {
-        document.getElementById("errorBox").textContent = "❌ 藥品資料載入失敗，請稍後再試";
+        console.error("❌ 取消簽收失敗：", err);
       });
     }
+  }
 
-    function handleCheckbox(cb) {
-      const tr = cb.closest("tr");
-      tr.classList.toggle("cancelled", !cb.checked);
-      updateCount();
-    }
+  function updateCount() {
+    const all = document.querySelectorAll(".chkbox").length;
+    const checked = document.querySelectorAll(".chkbox:checked").length;
+    document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
+  }
 
-    function updateCount() {
-      const all = document.querySelectorAll(".chkbox").length;
-      const checked = document.querySelectorAll(".chkbox:checked").length;
-      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
-    }
-
-    function zoomImage(src) {
-      document.getElementById("modal-img").src = src;
-      document.getElementById("modal").style.display = "block";
-    }
-  </script>
+  function zoomImage(src) {
+    document.getElementById("modal-img").src = src;
+    document.getElementById("modal").style.display = "block";
+  }
+</script>
 </body>
 </html>
