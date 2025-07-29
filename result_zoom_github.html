@@ -110,8 +110,10 @@
     </table>
   </div>
 
+  
   <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
   <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
+
 
   <div id="modal" onclick="this.style.display='none'">
     <img id="modal-img" src="" alt="放大圖片" />
@@ -124,6 +126,7 @@
   const token = localStorage.getItem("token");
   const ward = localStorage.getItem("ward");
   const empCode = localStorage.getItem("empCode");
+  let allChecked = true;
 
   if (!ward || !barcode || !token || !empCode) {
     document.getElementById("errorBox").textContent = "❌ 缺少必要資訊，請重新登入或掃描";
@@ -220,15 +223,16 @@
     document.getElementById("modal").style.display = "block";
   }
 
-
   function toggleAll() {
-      const boxes = document.querySelectorAll(".chkbox");
-      allChecked = !allChecked;
-      document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
-      boxes.forEach(cb => {
-        cb.checked = allChecked;
-        handleCheckbox(cb.closest(".med-card"), cb);
-      }
+    const boxes = document.querySelectorAll(".chkbox");
+    allChecked = !allChecked;
+    document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
+    boxes.forEach(cb => {
+      cb.checked = allChecked;
+      cb.dispatchEvent(new Event("change")); // 確保觸發 onchange 處理
+    });
+  }
+
 </script>
 </body>
 </html>
