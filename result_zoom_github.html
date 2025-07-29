@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 顯示藥單（簽收版）</title>
+  <meta charset="UTF-8">
+  <title>📋 顯示藥單</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -11,7 +12,6 @@
       padding: 20px;
       text-align: center;
     }
-
     table {
       border-collapse: collapse;
       margin: 20px auto;
@@ -19,176 +19,230 @@
       background: white;
       box-shadow: 0 0 10px #ccc;
       border-radius: 12px;
-      overflow-x: auto;
     }
-
     th, td {
       border: 1px solid rgba(0,0,0,0.05);
-      padding: 12px;
     }
-
     td:nth-child(2) {
       text-align: left;
       padding-left: 12px;
     }
-
     th {
       background: #1976d2;
       color: white;
     }
-
-    .btn-row {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin: 24px 0;
-    }
-
     .btn {
-      padding: 12px 24px;
-      background: #de58f0;
+      background: #2e7d32;
       color: white;
-      font-size: 18px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      font-weight: bold;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 8px;
     }
-
-    .btn:hover {
-      background: #b23fc7;
+    .med-image {
+      width: 60px;
+      border-radius: 6px;
+      cursor: zoom-in;
     }
-
-    @media (max-width: 768px) {
-      .btn-row {
-        flex-direction: row !important;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 12px;
-      }
-
-      .btn {
-        flex: 1 1 40%;
-        font-size: 18px;
-        padding: 12px 10px;
-      }
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.8);
     }
+    #modal img {
+      margin-top: 5%;
+      max-width: 90%;
+      max-height: 90%;
+    }
+    .cancelled {
+      background-color: #dcdcdc;
+      color: #555;
+    }
+    #errorBox {
+      color: red;
+      font-size: 18px;
+      margin: 10px;
+    }
+ @media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  table {
+    width: 98%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  th, td {
+    font-size: 20px;
+    padding: 8px;
+  }
+
+  .btn-row {
+    display: flex;
+    flex-direction: row;         /* 💡 橫向排列 */
+    justify-content: center;     /* 水平置中 */
+    flex-wrap: wrap;             /* 換行（若螢幕太小） */
+    gap: 12px;
+  }
+
+  .btn {
+    flex: 1 1 45%;               /* 每顆按鈕佔一半寬 */
+    font-size: 18px;
+    padding: 12px 10px;
+    box-sizing: border-box;
+  }
+
+  .med-image {
+    width: 48px;
+  }
+}
+
+
   </style>
 </head>
 <body>
-
-  <div class="info" id="rxInfo"></div>
-  <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
-  <div class="error-msg" id="errorMsg"></div>
-
-  <table id="drugTable">
-    <thead>
-      <tr>
-        <th>勾選</th>
-        <th>藥品名稱</th>
-        <th>劑型</th>
-        <th>數量</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <!-- 藥品資料動態插入 -->
-    </tbody>
-  </table>
-
-  <div class="btn-row">
-    <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
-    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
+  <p id="rxInfo"></p>
+  <p id="errorBox"></p>
+  <div style="text-align: right;">
+    <p id="countDisplay"></p>
+  </div>
+  <div style="overflow-x:auto;">
+    <table id="resultTable" style="display:none;">
+      <tbody id="medBody"></tbody>
+    </table>
   </div>
 
-  <script>
-    const token = localStorage.getItem("token");
-    const ward = localStorage.getItem("ward");
-    const empCode = localStorage.getItem("empCode");
-    const barcode = new URLSearchParams(location.search).get("barcode");
-    let allChecked = true;
+  
+  <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
 
-    if (!token || !ward || !empCode || !barcode) {
-      alert("❌ 資料不足，請重新登入或掃描");
-    } else {
-      document.getElementById("rxInfo").innerHTML =
-        `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
 
-      fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+  <div id="modal" onclick="this.style.display='none'">
+    <img id="modal-img" src="" alt="放大圖片" />
+  </div>
+
+<script>
+  const defaultImg = "https://i.imgur.com/POcLxgF.png";
+  const params = new URLSearchParams(location.search);
+  const barcode = params.get("barcode");
+  const token = localStorage.getItem("token");
+  const ward = localStorage.getItem("ward");
+  const empCode = localStorage.getItem("empCode");
+  let allChecked = true;
+
+  if (!ward || !barcode || !token || !empCode) {
+    document.getElementById("errorBox").textContent = "❌ 缺少必要資訊，請重新登入或掃描";
+  } else {
+    document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
+
+    fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+      headers: {
+        Authorization: token,
+        Accept: "application/json"
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("medBody");
+      const table = document.getElementById("resultTable");
+
+      if (typeof data.content === "string") {
+        document.getElementById("errorBox").textContent = "⚠️ " + data.content;
+        return;
+      }
+
+      const meds = Array.isArray(data?.content) ? data.content : [];
+
+      if (meds.length === 0) {
+        document.getElementById("errorBox").textContent = "❌ 查無藥品資料";
+        return;
+      }
+
+      meds.forEach(med => {
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-code", med.ItemNo);  // 綁定藥品代碼
+
+        tr.innerHTML = `
+          <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
+          <td>${med.ItemName}</td>
+          <td>${med.TotQty}</td>
+          <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
+        `;
+
+        tbody.appendChild(tr);
+        handleCheckbox(tr.querySelector("input"));
+      });
+
+      table.style.display = "table";
+      updateCount();
+    })
+    .catch(() => {
+      document.getElementById("errorBox").textContent = "❌ 藥品資料載入失敗，請稍後再試";
+    });
+  }
+
+  function handleCheckbox(cb) {
+    const tr = cb.closest("tr");
+    tr.classList.toggle("cancelled", !cb.checked);
+    updateCount();
+
+    if (!cb.checked) {
+      const itemCode = tr.getAttribute("data-code");
+
+      const body = {
+        BarCode: barcode,
+        ItemCode: itemCode,
+        SignUser: empCode
+      };
+
+      fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
+        method: "POST",
         headers: {
           Authorization: token,
-          Accept: "application/json"
-        }
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
       })
       .then(res => res.json())
-      .then(data => {
-        const tbody = document.getElementById("tableBody");
-        const errorBox = document.getElementById("errorMsg");
-
-        if (typeof data.content === "string") {
-          errorBox.textContent = "⚠️ " + data.content;
-          return;
-        }
-
-        const meds = Array.isArray(data?.content) ? data.content : [];
-        if (meds.length === 0) {
-          errorBox.textContent = "❌ 查無藥品資料";
-          return;
-        }
-
-        meds.forEach(med => {
-          const tr = document.createElement("tr");
-          tr.setAttribute("data-code", med.ItemNo);
-
-          const tdCheck = document.createElement("td");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.className = "chkbox";
-          checkbox.checked = true;
-          checkbox.onchange = () => handleCheckbox(tr, checkbox);
-          tdCheck.appendChild(checkbox);
-
-          const tdName = document.createElement("td");
-          tdName.textContent = med.ItemName;
-
-          const tdForm = document.createElement("td");
-          tdForm.textContent = med.FormName;
-
-          const tdQty = document.createElement("td");
-          tdQty.textContent = Number(med.TotQty).toFixed(3);
-
-          tr.appendChild(tdCheck);
-          tr.appendChild(tdName);
-          tr.appendChild(tdForm);
-          tr.appendChild(tdQty);
-          tbody.appendChild(tr);
-
-          handleCheckbox(tr, checkbox);
-        });
-
-        updateCount();
+      .then(result => {
+        console.log("✅ 已取消簽收：", result);
+      })
+      .catch(err => {
+        console.error("❌ 取消簽收失敗：", err);
       });
     }
+  }
 
-    function handleCheckbox(row, checkbox) {
-      row.classList.toggle("cancelled", !checkbox.checked);
-      updateCount();
-    }
+  function updateCount() {
+    const all = document.querySelectorAll(".chkbox").length;
+    const checked = document.querySelectorAll(".chkbox:checked").length;
+    document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
+  }
 
-    function updateCount() {
-      const total = document.querySelectorAll(".chkbox").length;
-      const checked = document.querySelectorAll(".chkbox:checked").length;
-      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${total}`;
-    }
+  function zoomImage(src) {
+    document.getElementById("modal-img").src = src;
+    document.getElementById("modal").style.display = "block";
+  }
 
-    function toggleAll() {
-      const boxes = document.querySelectorAll(".chkbox");
-      allChecked = !allChecked;
-      document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
-      boxes.forEach(cb => {
-        cb.checked = allChecked;
-        cb.dispatchEvent(new Event("change"));
-      });
-    }
-  </script>
+  function toggleAll() {
+    const boxes = document.querySelectorAll(".chkbox");
+    allChecked = !allChecked;
+    document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
+    boxes.forEach(cb => {
+      cb.checked = allChecked;
+      cb.dispatchEvent(new Event("change")); // 確保觸發 onchange 處理
+    });
+  }
+
+</script>
 </body>
 </html>
