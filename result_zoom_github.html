@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>📋 顯示藥單</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -14,7 +14,7 @@
     table {
       border-collapse: collapse;
       margin: 20px auto;
-      width: 100%;
+      width: 90%;
       background: white;
       box-shadow: 0 0 10px #ccc;
       border-radius: 12px;
@@ -70,12 +70,12 @@
         padding: 10px;
       }
       table {
-        width: 95%;
+        width: 98%;
         border-radius: 0;
         box-shadow: none;
       }
       th, td {
-        font-size: 14px;
+        font-size: 20px;
         padding: 8px;
       }
       .btn {
@@ -87,9 +87,9 @@
 </head>
 <body>
   <p id="rxInfo"></p>
-  <p id="apiMessage" style="color:red;font-weight:bold;"></p>
+  <div style="text-align: right;">
   <p id="countDisplay"></p>
-
+</div>
   <div style="overflow-x:auto;">
     <table id="resultTable" style="display:none;">
       <tbody id="medBody"></tbody>
@@ -103,17 +103,17 @@
   </div>
 
   <script>
+    const token = "Bearer Q29ubmVjdERCIExvY2FsSG9zdA";
+    const ward = "N13";
+    const empCode = "A001";
+    const barcode = new URLSearchParams(location.search).get("barcode");
     const defaultImg = "https://i.imgur.com/POcLxgF.png";
-    const params = new URLSearchParams(location.search);
-    const barcode = params.get("barcode");
-    const token = localStorage.getItem("token");
-    const ward = localStorage.getItem("ward");
-    const empCode = localStorage.getItem("empCode");
 
-    if (!ward || !barcode || !token || !empCode) {
-      alert("❌ 缺少必要資訊，請重新登入");
+    if (!token || !ward || !empCode || !barcode) {
+      alert("❌ 資料不完整，請重新登入或掃描");
     } else {
-      document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>`;
+      document.getElementById("rxInfo").innerHTML =
+        `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
 
       fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
         headers: {
@@ -123,15 +123,13 @@
       })
       .then(res => res.json())
       .then(data => {
-        // 若回傳的是錯誤訊息（非陣列），直接顯示錯誤內容
-        if (!Array.isArray(data?.content)) {
-          document.getElementById("apiMessage").textContent = data?.content || "❌ 查無藥品資料";
-          return;
-        }
-
-        const meds = data.content;
+        const meds = data?.content || [];
         const tbody = document.getElementById("medBody");
         const table = document.getElementById("resultTable");
+        if (meds.length === 0) {
+          alert("❌ 查無藥品資料");
+          return;
+        }
 
         meds.forEach(med => {
           const tr = document.createElement("tr");
@@ -163,8 +161,10 @@
     }
 
     function zoomImage(src) {
-      document.getElementById("modal-img").src = src;
-      document.getElementById("modal").style.display = "block";
+      const modal = document.getElementById("modal");
+      const modalImg = document.getElementById("modal-img");
+      modalImg.src = src;
+      modal.style.display = "block";
     }
   </script>
 </body>
