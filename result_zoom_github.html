@@ -124,7 +124,7 @@
       })
       .then(res => res.json())
       .then(data => {
-        const meds = Array.isArray(data?.content?.drugList) ? data.content.drugList : null;
+const meds = Array.isArray(data?.content) ? data.content : null;
         if (!meds) {
           document.getElementById("apiMessage").textContent = data?.content || "❌ 查無藥品資料";
           return;
