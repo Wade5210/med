@@ -69,6 +69,38 @@
       font-size: 18px;
       margin: 10px;
     }
+     #rxInfo {
+  text-align: left;
+  max-width: 720px;
+  margin: 0 auto 12px;
+  font-size: 18px;
+  line-height: 1.6;
+  padding: 0 10px;
+}
+
+.info-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  color: #424242;
+  background: #fffde7;
+  padding: 8px 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-bottom: 1px solid #ddd;
+}
+
+.info-bottom {
+  text-align: right;
+  color: #424242;
+  background: #fffde7;
+  padding: 8px 12px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-top: -1px; /* 貼齊上方 */
+}
  @media (max-width: 768px) {
   body {
     padding: 10px;
@@ -141,7 +173,14 @@
   if (!ward || !barcode || !token || !empCode) {
     document.getElementById("errorBox").textContent = "❌ 缺少必要資訊，請重新登入或掃描";
   } else {
-    document.getElementById("rxInfo").innerHTML = `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
+document.getElementById("rxInfo").innerHTML = `
+  <div class="info-top">
+    護理站：<strong>${ward}</strong>，人員：<strong>${empCode}</strong>
+  </div>
+  <div class="info-bottom">
+    醫囑號：<strong>${barcode}</strong>
+  </div>
+`;
 
     fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
       headers: {
