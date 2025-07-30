@@ -17,7 +17,7 @@
     .info {
       text-align: center;
       margin: 12px 0;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .count {
@@ -160,7 +160,7 @@
       alert("❌ 資料不足，請重新登入或掃描");
     } else {
       document.getElementById("rxInfo").innerHTML =
-        `護理站：<strong>${ward}</strong>，醫囑號：<strong>${barcode}</strong>，人員：<strong>${empCode}</strong>`;
+        `護理站：<strong>${ward}</strong>  醫囑號：<strong>${barcode}</strong>  人員：<strong>${empCode}</strong>`;
 
       fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
         headers: {
