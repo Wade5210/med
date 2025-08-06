@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 顯示藥單 </title>
+  <title>📋 顯示藥單</title>
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -11,13 +11,7 @@
       padding: 10px;
       margin: 0;
     }
-
-    .info {
-      text-align: center;
-      margin: 12px 0;
-      font-size: 16px;
-    }
-
+    .info { text-align: center; margin: 12px 0; font-size: 16px; }
     .count {
       font-weight: bold;
       color: #2e7d32;
@@ -26,14 +20,12 @@
       margin: 0 auto;
       padding: 0 16px;
     }
-
     .error-msg {
       color: red;
       font-size: 20px;
       text-align: center;
       margin-top: 20px;
     }
-
     .card-container {
       display: flex;
       flex-direction: column;
@@ -41,7 +33,6 @@
       max-width: 720px;
       margin: 0 auto;
     }
-
     .med-card {
       display: grid;
       grid-template-columns: 56px 1fr 50px 30px;
@@ -54,11 +45,7 @@
       box-sizing: border-box;
       position: relative;
     }
-
-    .med-card.cancelled {
-      background-color: #e0e0e0;
-    }
-
+    .med-card.cancelled { background-color: #e0e0e0; }
     .med-card img {
       width: 48px;
       height: 64px;
@@ -66,39 +53,30 @@
       border-radius: 8px;
       cursor: zoom-in;
     }
-
     .med-info {
       display: flex;
       flex-direction: column;
       justify-content: center;
       text-align: left;
     }
-
-    .med-info .name {
-      font-size: 13px;
-      font-weight: bold;
-    }
-
+    .med-info .name { font-size: 13px; font-weight: bold; }
     .checkbox-area {
       display: flex;
       justify-content: center;
       align-items: center;
     }
-
     .checkbox-area input[type="checkbox"] {
       width: 18px;
       height: 18px;
       transform: scale(1.2);
       cursor: pointer;
     }
-
     .btn-row {
       display: flex;
       justify-content: center;
       gap: 16px;
       margin: 24px 0;
     }
-
     .btn {
       padding: 12px 24px;
       background: #c3e2dd;
@@ -109,11 +87,7 @@
       cursor: pointer;
       font-weight: bold;
     }
-
-    .btn:hover {
-      background: #7dd6c7;
-    }
-
+    .btn:hover { background: #7dd6c7; }
     #rxInfo {
       text-align: left;
       max-width: 720px;
@@ -122,7 +96,6 @@
       line-height: 1.6;
       padding: 0 10px;
     }
-
     .info-top {
       display: flex;
       justify-content: space-between;
@@ -135,7 +108,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       border-bottom: 1px solid #ddd;
     }
-
     .info-bottom {
       text-align: right;
       color: #424242;
@@ -146,7 +118,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       margin-top: -1px;
     }
-
     #modal {
       display: none;
       position: fixed;
@@ -157,7 +128,6 @@
       height: 100vh;
       background-color: rgba(0,0,0,0.8);
     }
-
     #modal img {
       display: block;
       margin: 5% auto;
@@ -168,184 +138,193 @@
 </head>
 <body>
 
-  <div class="info" id="rxInfo"></div>
-  <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
-  <div class="error-msg" id="errorMsg"></div>
+<div class="info" id="rxInfo"></div>
+<div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
+<div class="error-msg" id="errorMsg"></div>
+<div class="card-container" id="cardContainer"></div>
 
-  <div class="card-container" id="cardContainer"></div>
+<div class="btn-row">
+  <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
+</div>
 
-  <div class="btn-row">
-    <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
-    <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_pda_github.html'">🔄 繼續掃描</button>
+<!-- ✅ 自訂對話框 -->
+<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.5); z-index:9999;">
+  <div style="background:white; padding:24px; max-width:360px; margin:30% auto; border-radius:12px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+    <p style="font-size:18px;">⚠️ 此醫囑非本護理站<br>是否要簽收？</p>
+    <button id="confirmYes" style="margin:8px; padding:10px 20px; background:#4caf50; color:white; border:none; border-radius:8px;">確定</button>
+    <button id="confirmNo" style="margin:8px; padding:10px 20px; background:#ccc; color:black; border:none; border-radius:8px;">取消</button>
   </div>
+</div>
 
-  <div id="modal" onclick="this.style.display='none'">
-    <img id="modal-img" src="" alt="放大圖片" />
-  </div>
+<div id="modal" onclick="this.style.display='none'">
+  <img id="modal-img" src="" alt="放大圖片" />
+</div>
 
-  <script>
-    const token = localStorage.getItem("token");
-    const ward = localStorage.getItem("ward");
-    const empCode = localStorage.getItem("empCode");
-    const barcode = new URLSearchParams(location.search).get("barcode");
-    const defaultImg = "https://i.imgur.com/POcLxgF.png";
-    let allChecked = true;
+<script>
+const token = localStorage.getItem("token");
+const ward = localStorage.getItem("ward");
+const empCode = localStorage.getItem("empCode");
+const barcode = new URLSearchParams(location.search).get("barcode");
+const defaultImg = "https://i.imgur.com/POcLxgF.png";
+let allChecked = true;
 
-    if (!token || !ward || !empCode || !barcode) {
-      alert("❌ 資料不足，請重新登入或掃描");
-    } else {
-      document.getElementById("rxInfo").innerHTML = `
-        <div class="info-top">
-          護理站：<strong>${ward}</strong>  人員：<strong>${empCode}</strong>
-        </div>
-        <div class="info-bottom">
-          醫囑號：<strong>${barcode}</strong>
-        </div>`;
+if (!token || !ward || !empCode || !barcode) {
+  alert("❌ 資料不足，請重新登入或掃描");
+} else {
+  document.getElementById("rxInfo").innerHTML = `
+    <div class="info-top">
+      護理站：<strong>${ward}</strong>  人員：<strong>${empCode}</strong>
+    </div>
+    <div class="info-bottom">
+      醫囑號：<strong>${barcode}</strong>
+    </div>`;
 
-      fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
-        headers: {
-          Authorization: token,
-          Accept: "application/json"
+  fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+    headers: {
+      Authorization: token,
+      Accept: "application/json"
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    const errorBox = document.getElementById("errorMsg");
+
+    // ✅ 改用自訂 modal 判斷非本護理站
+    if (
+      data.code === 400 &&
+      typeof data.content === "string" &&
+      data.content.includes("非本護理站")
+    ) {
+      showCustomConfirm(
+        () => {
+          fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=XXXXXX&barcode=${barcode}&empCode=${empCode}`, {
+            headers: {
+              Authorization: token,
+              Accept: "application/json"
+            }
+          })
+          .then(res => res.json())
+          .then(renderDrugList);
+        },
+        () => {
+          errorBox.textContent = "❌ 已取消簽收，請確認護理站是否正確。";
         }
-      })
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("cardContainer");
-        const errorBox = document.getElementById("errorMsg");
-
-        // ⛔ 若為非本護理站錯誤
-        if (
-          data.code === 400 &&
-          typeof data.content === "string" &&
-          data.content.includes("非本護理站")
-        ) {
-          const confirmReceive = confirm("⚠️ 此醫囑非本護理站，是否要簽收？");
-          if (confirmReceive) {
-            fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=XXXXXX&barcode=${barcode}&empCode=${empCode}`, {
-              headers: {
-                Authorization: token,
-                Accept: "application/json"
-              }
-            })
-            .then(res => res.json())
-            .then(data => {
-              renderDrugList(data);
-            });
-          } else {
-            errorBox.textContent = "❌ 已取消簽收，請確認護理站是否正確。";
-          }
-          return;
-        }
-
-        renderDrugList(data); // ✅ 正常流程
-      });
+      );
+      return;
     }
 
-    // 🔁 渲染藥品資料
-    function renderDrugList(data) {
-      const container = document.getElementById("cardContainer");
-      const errorBox = document.getElementById("errorMsg");
-      container.innerHTML = "";
+    renderDrugList(data);
+  });
+}
 
-      const meds = Array.isArray(data?.content) ? data.content : [];
-      if (meds.length === 0) {
-        errorBox.textContent = "❌ 查無藥品資料";
-        return;
-      }
+function renderDrugList(data) {
+  const container = document.getElementById("cardContainer");
+  const errorBox = document.getElementById("errorMsg");
+  container.innerHTML = "";
 
-      meds.forEach(med => {
-        const card = document.createElement("div");
-        card.className = "med-card";
-        card.dataset.code = med.ItemNo;
+  const meds = Array.isArray(data?.content) ? data.content : [];
+  if (meds.length === 0) {
+    errorBox.textContent = "❌ 查無藥品資料";
+    return;
+  }
 
-        const img = document.createElement("img");
-        img.src = med.ImageUrl;
-        img.onerror = () => img.src = defaultImg;
-        img.onclick = () => zoomImage(img.src);
+  meds.forEach(med => {
+    const card = document.createElement("div");
+    card.className = "med-card";
+    card.dataset.code = med.ItemNo;
 
-        const info = document.createElement("div");
-        info.className = "med-info";
-        info.innerHTML = `<div class="name">${med.ItemName}</div>`;
+    const img = document.createElement("img");
+    img.src = med.ImageUrl;
+    img.onerror = () => img.src = defaultImg;
+    img.onclick = () => zoomImage(img.src);
 
-        const qtyOnly = document.createElement("div");
-        qtyOnly.style.textAlign = "center";
-        qtyOnly.innerHTML = `<strong>${Number(med.TotQty).toFixed(3)}</strong>`;
+    const info = document.createElement("div");
+    info.className = "med-info";
+    info.innerHTML = `<div class="name">${med.ItemName}</div>`;
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "chkbox";
-        checkbox.checked = true;
-        checkbox.onchange = () => handleCheckbox(card, checkbox);
+    const qtyOnly = document.createElement("div");
+    qtyOnly.style.textAlign = "center";
+    qtyOnly.innerHTML = `<strong>${Number(med.TotQty).toFixed(3)}</strong>`;
 
-        const checkWrap = document.createElement("div");
-        checkWrap.className = "checkbox-area";
-        checkWrap.appendChild(checkbox);
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "chkbox";
+    checkbox.checked = true;
+    checkbox.onchange = () => handleCheckbox(card, checkbox);
 
-        card.appendChild(img);
-        card.appendChild(info);
-        card.appendChild(qtyOnly);
-        card.appendChild(checkWrap);
+    const checkWrap = document.createElement("div");
+    checkWrap.className = "checkbox-area";
+    checkWrap.appendChild(checkbox);
 
-        container.appendChild(card);
-        handleCheckbox(card, checkbox);
-      });
+    card.appendChild(img);
+    card.appendChild(info);
+    card.appendChild(qtyOnly);
+    card.appendChild(checkWrap);
 
-      updateCount();
-    }
+    container.appendChild(card);
+    handleCheckbox(card, checkbox);
+  });
 
-    function handleCheckbox(card, checkbox) {
-      card.classList.toggle("cancelled", !checkbox.checked);
-      updateCount();
+  updateCount();
+}
 
-      if (!checkbox.checked) {
-        const itemCode = card.dataset.code;
-        const body = {
-          BarCode: barcode,
-          ItemCode: itemCode,
-          SignUser: empCode
-        };
+function showCustomConfirm(onConfirm, onCancel) {
+  const modal = document.getElementById("customModal");
+  modal.style.display = "block";
+  document.getElementById("confirmYes").onclick = () => {
+    modal.style.display = "none";
+    onConfirm();
+  };
+  document.getElementById("confirmNo").onclick = () => {
+    modal.style.display = "none";
+    onCancel();
+  };
+}
 
-        fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
-          method: "POST",
-          headers: {
-            Authorization: token,
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        })
-        .then(res => res.json())
-        .then(result => {
-          console.log("✅ 已取消簽收：", result);
-        })
-        .catch(err => {
-          console.error("❌ 取消簽收失敗：", err);
-        });
-      }
-    }
+function handleCheckbox(card, checkbox) {
+  card.classList.toggle("cancelled", !checkbox.checked);
+  updateCount();
+  if (!checkbox.checked) {
+    const itemCode = card.dataset.code;
+    const body = { BarCode: barcode, ItemCode: itemCode, SignUser: empCode };
+    fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
+      method: "POST",
+      headers: {
+        Authorization: token,
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }).then(res => res.json())
+      .then(result => console.log("✅ 已取消簽收：", result))
+      .catch(err => console.error("❌ 取消簽收失敗：", err));
+  }
+}
 
-    function updateCount() {
-      const total = document.querySelectorAll(".chkbox").length;
-      const checked = document.querySelectorAll(".chkbox:checked").length;
-      document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${total}`;
-    }
+function updateCount() {
+  const total = document.querySelectorAll(".chkbox").length;
+  const checked = document.querySelectorAll(".chkbox:checked").length;
+  document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${total}`;
+}
 
-    function toggleAll() {
-      const boxes = document.querySelectorAll(".chkbox");
-      allChecked = !allChecked;
-      document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
-      boxes.forEach(cb => {
-        cb.checked = allChecked;
-        handleCheckbox(cb.closest(".med-card"), cb);
-      });
-    }
+function toggleAll() {
+  const boxes = document.querySelectorAll(".chkbox");
+  allChecked = !allChecked;
+  document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
+  boxes.forEach(cb => {
+    cb.checked = allChecked;
+    handleCheckbox(cb.closest(".med-card"), cb);
+  });
+}
 
-    function zoomImage(src) {
-      const modal = document.getElementById("modal");
-      const modalImg = document.getElementById("modal-img");
-      modalImg.src = src;
-      modal.style.display = "block";
-    }
-  </script>
+function zoomImage(src) {
+  const modal = document.getElementById("modal");
+  const modalImg = document.getElementById("modal-img");
+  modalImg.src = src;
+  modal.style.display = "block";
+}
+</script>
+
 </body>
 </html>
