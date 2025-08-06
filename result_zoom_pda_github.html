@@ -219,7 +219,7 @@
           typeof data.content === "string" &&
           data.content.includes("非本護理站")
         ) {
-          const confirmReceive = confirm("⚠️ 此醫囑非本護理站，是否要以萬能護理站（XXXXXX）簽收？");
+          const confirmReceive = confirm("⚠️ 此醫囑非本護理站，是否要簽收？");
           if (confirmReceive) {
             fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=XXXXXX&barcode=${barcode}&empCode=${empCode}`, {
               headers: {
