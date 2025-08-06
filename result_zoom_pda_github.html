@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -12,14 +14,21 @@
       margin: 0;
     }
 
-    .count {
-      font-weight: bold;
-      color: #2e7d32;
-      text-align: right;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 16px;
+    .info {
+      text-align: center;
+      margin: 12px 0;
+      font-size: 16px;
     }
+
+    .count {
+  font-weight: bold;
+  color: #2e7d32;
+  text-align: right;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
 
     .error-msg {
       color: red;
@@ -46,6 +55,7 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       padding: 12px 16px;
       box-sizing: border-box;
+      position: relative;
     }
 
     .med-card.cancelled {
@@ -94,7 +104,7 @@
 
     .btn {
       padding: 12px 24px;
-      background: #de58f0;
+      background: #c3e2dd;
       color: white;
       font-size: 18px;
       border: none;
@@ -104,41 +114,40 @@
     }
 
     .btn:hover {
-      background: #b23fc7;
+      background: #7dd6c7;
     }
+ #rxInfo {
+  text-align: left;
+  max-width: 720px;
+  margin: 0 auto 12px;
+  font-size: 18px;
+  line-height: 1.6;
+  padding: 0 10px;
+}
 
-    #rxInfo {
-      text-align: left;
-      max-width: 720px;
-      margin: 0 auto 12px;
-      font-size: 18px;
-      line-height: 1.6;
-      padding: 0 10px;
-    }
+.info-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  color: #424242;
+  background: #fffde7;
+  padding: 8px 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-bottom: 1px solid #ddd;
+}
 
-    .info-top {
-      display: flex;
-      justify-content: space-between;
-      font-weight: 500;
-      color: #424242;
-      background: #fffde7;
-      padding: 8px 12px;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      border-bottom: 1px solid #ddd;
-    }
-
-    .info-bottom {
-      text-align: right;
-      color: #424242;
-      background: #fffde7;
-      padding: 8px 12px;
-      border-bottom-left-radius: 12px;
-      border-bottom-right-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-top: -1px;
-    }
+.info-bottom {
+  text-align: right;
+  color: #424242;
+  background: #fffde7;
+  padding: 8px 12px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-top: -1px; /* 貼齊上方 */
+}
 
     #modal {
       display: none;
@@ -164,6 +173,7 @@
   <div class="info" id="rxInfo"></div>
   <div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
   <div class="error-msg" id="errorMsg"></div>
+
   <div class="card-container" id="cardContainer"></div>
 
   <div class="btn-row">
@@ -180,19 +190,21 @@
     const ward = localStorage.getItem("ward");
     const empCode = localStorage.getItem("empCode");
     const barcode = new URLSearchParams(location.search).get("barcode");
-    const defaultImg = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png";
+    const defaultImg = "https://i.imgur.com/POcLxgF.png";
     let allChecked = true;
 
     if (!token || !ward || !empCode || !barcode) {
       alert("❌ 資料不足，請重新登入或掃描");
     } else {
-      document.getElementById("rxInfo").innerHTML = `
-        <div class="info-top">
-          護理站：<strong>${ward}</strong>  人員：<strong>${empCode}</strong>
-        </div>
-        <div class="info-bottom">
-          醫囑號：<strong>${barcode}</strong>
-        </div>`;
+document.getElementById("rxInfo").innerHTML = `
+  <div class="info-top">
+    護理站：<strong>${ward}</strong>  人員：<strong>${empCode}</strong>
+  </div>
+  <div class="info-bottom">
+    醫囑號：<strong>${barcode}</strong>
+  </div>
+`;
+
 
       fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
         headers: {
@@ -202,85 +214,59 @@
       })
       .then(res => res.json())
       .then(data => {
+        const container = document.getElementById("cardContainer");
         const errorBox = document.getElementById("errorMsg");
+
         if (typeof data.content === "string") {
           errorBox.textContent = "⚠️ " + data.content;
           return;
         }
 
-        if (data.ward && data.ward !== ward) {
-          const confirmReceive = confirm(`⚠️ 此醫囑為「${data.ward}」的藥品，非本護理站（${ward}）。\n是否仍要簽收？`);
-          if (confirmReceive) {
-            fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=XXXXXX&barcode=${barcode}&empCode=${empCode}`, {
-              headers: {
-                Authorization: token,
-                Accept: "application/json"
-              }
-            })
-            .then(res => res.json())
-            .then(retryData => {
-              renderMedList(retryData);
-            });
-            return;
-          } else {
-            errorBox.textContent = "❌ 已取消簽收，請確認護理站是否正確。";
-            return;
-          }
+        const meds = Array.isArray(data?.content) ? data.content : [];
+        if (meds.length === 0) {
+          errorBox.textContent = "❌ 查無藥品資料";
+          return;
         }
 
-        renderMedList(data);
+        meds.forEach(med => {
+          const card = document.createElement("div");
+          card.className = "med-card";
+          card.dataset.code = med.ItemNo;
+
+          const img = document.createElement("img");
+          img.src = med.ImageUrl;
+          img.onerror = () => img.src = defaultImg;
+          img.onclick = () => zoomImage(img.src);
+
+          const info = document.createElement("div");
+          info.className = "med-info";
+          info.innerHTML = `<div class="name">${med.ItemName}</div>`;
+
+          const qtyOnly = document.createElement("div");
+          qtyOnly.style.textAlign = "center";
+          qtyOnly.innerHTML = `<strong>${Number(med.TotQty).toFixed(3)}</strong>`;
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "chkbox";
+          checkbox.checked = true;
+          checkbox.onchange = () => handleCheckbox(card, checkbox);
+
+          const checkWrap = document.createElement("div");
+          checkWrap.className = "checkbox-area";
+          checkWrap.appendChild(checkbox);
+
+          card.appendChild(img);
+          card.appendChild(info);
+          card.appendChild(qtyOnly);
+          card.appendChild(checkWrap);
+
+          container.appendChild(card);
+          handleCheckbox(card, checkbox);
+        });
+
+        updateCount();
       });
-    }
-
-    function renderMedList(data) {
-      const container = document.getElementById("cardContainer");
-      const errorBox = document.getElementById("errorMsg");
-      container.innerHTML = "";
-
-      const meds = Array.isArray(data?.content) ? data.content : [];
-      if (meds.length === 0) {
-        errorBox.textContent = "❌ 查無藥品資料";
-        return;
-      }
-
-      meds.forEach(med => {
-        const card = document.createElement("div");
-        card.className = "med-card";
-        card.dataset.code = med.ItemNo;
-
-        const img = document.createElement("img");
-        img.src = med.ImageUrl;
-        img.onerror = () => img.src = defaultImg;
-        img.onclick = () => zoomImage(img.src);
-
-        const info = document.createElement("div");
-        info.className = "med-info";
-        info.innerHTML = `<div class="name">${med.ItemName}</div>`;
-
-        const qtyOnly = document.createElement("div");
-        qtyOnly.style.textAlign = "center";
-        qtyOnly.innerHTML = `<strong>${Number(med.TotQty).toFixed(3)}</strong>`;
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "chkbox";
-        checkbox.checked = true;
-        checkbox.onchange = () => handleCheckbox(card, checkbox);
-
-        const checkWrap = document.createElement("div");
-        checkWrap.className = "checkbox-area";
-        checkWrap.appendChild(checkbox);
-
-        card.appendChild(img);
-        card.appendChild(info);
-        card.appendChild(qtyOnly);
-        card.appendChild(checkWrap);
-
-        container.appendChild(card);
-        handleCheckbox(card, checkbox);
-      });
-
-      updateCount();
     }
 
     function handleCheckbox(card, checkbox) {
