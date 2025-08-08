@@ -134,6 +134,7 @@
       max-width: 90%;
       max-height: 90%;
     }
+
     @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -206,6 +207,26 @@
   </div>
 </div>
 
+  <!-- 🔔 高貴/冷藏 提醒 Modal -->
+<div id="noticeModal" style="
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.5); z-index:9999;">
+  <div style="
+    background:#fff; padding:20px; max-width:420px;
+    margin:22vh auto; border-radius:14px; text-align:left;
+    box-shadow:0 4px 16px rgba(0,0,0,0.25); font-family:'Noto Sans TC',sans-serif;">
+    <div style="font-size:18px; font-weight:700; color:#333; margin-bottom:8px;">
+      ⚠️ 特殊處理提醒
+    </div>
+    <div id="noticeList" style="font-size:16px; line-height:1.6; color:#444; margin-bottom:12px;"></div>
+    <div style="text-align:right;">
+      <button id="noticeOk" style="
+        padding:10px 16px; background:#1976d2; color:#fff; border:none;
+        border-radius:10px; cursor:pointer; font-weight:600;">我知道了</button>
+    </div>
+  </div>
+</div>
+
 
 <div id="modal" onclick="this.style.display='none'">
   <img id="modal-img" src="" alt="放大圖片" />
@@ -268,17 +289,50 @@ if (!token || !ward || !empCode || !barcode) {
   });
 }
 
+// 組合提醒訊息並顯示
+function showSpecialWarnings(meds) {
+  const lines = [];
+  meds.forEach(med => {
+    const isExp = String(med.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(med.IsFreezer).toLowerCase() === "true";
+    if (isExp) lines.push(`「${med.ItemName}」為高貴藥，請小心拿取。`);
+    if (isFrz) lines.push(`「${med.ItemName}」為冷藏藥，請記得冷藏。`);
+  });
+  if (!lines.length) return;
+
+  const listEl = document.getElementById("noticeList");
+  listEl.innerHTML = `<ul style="padding-left:1.2em; margin:0;">${
+    lines.map(t => `<li>${t}</li>`).join("")
+  }</ul>`;
+
+  const modal = document.getElementById("noticeModal");
+  modal.style.display = "block";
+  document.getElementById("noticeOk").onclick = () => {
+    modal.style.display = "none";
+  };
+}
+
+// 安全取得陣列的 helper（避免 content 不是陣列時錯誤）
+function toArray(x) {
+  return Array.isArray(x) ? x : (x ? [x] : []);
+}
+
+  
 function renderDrugList(data) {
   const container = document.getElementById("cardContainer");
   const errorBox = document.getElementById("errorMsg");
   container.innerHTML = "";
+
+  // 🔔 新增：接收藥單後檢查高貴/冷藏
+  const medsForCheck = toArray(data?.content);
+  showSpecialWarnings(medsForCheck);
 
   const meds = Array.isArray(data?.content) ? data.content : [];
   if (meds.length === 0) {
     errorBox.textContent = "❌ 查無藥品資料";
     return;
   }
-
+  // ...（後面原程式照舊）
   meds.forEach(med => {
     const card = document.createElement("div");
     card.className = "med-card";
