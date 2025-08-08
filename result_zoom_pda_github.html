@@ -380,8 +380,8 @@ function showSpecialWarnings(meds) {
   const frzOnly = [];   // 只有冷藏
 
   meds.forEach(m => {
-    const isExp = String(m.IsExpensive).toLowerCase() === "true";
-    const isFrz = String(m.IsFreezer).toLowerCase() === "true";
+    const isExp = String(m.IsExpensive).toLowerCase() === "false";
+    const isFrz = String(m.IsFreezer).toLowerCase() === "false";
     if (isExp && isFrz) {
       both.push(`「${m.ItemName}」為高貴且需冷藏，請小心拿取並記得冷藏。`);
     } else if (isExp) {
