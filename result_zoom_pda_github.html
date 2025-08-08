@@ -356,8 +356,8 @@ function renderDrugList(data) {
     wrapper.className = "med-card-wrapper";
 
     // 依屬性建立「櫃 / 冷」標籤；兩者皆 true 則上下顯示兩塊
-    const isExp = String(med.IsExpensive).toLowerCase() === "true";
-    const isFrz = String(med.IsFreezer).toLowerCase() === "true";
+    const isExp = String(med.IsExpensive).toLowerCase() === "false";
+    const isFrz = String(med.IsFreezer).toLowerCase() === "false";
     if (isExp || isFrz) {
       const badgeBox = document.createElement("div");
       badgeBox.className = "pill-label";
