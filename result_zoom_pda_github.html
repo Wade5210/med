@@ -291,6 +291,7 @@
 
 <script>
 const token = localStorage.getItem("token");
+const empName = localStorage.getItem("empName");
 const ward = localStorage.getItem("ward");
 const empCode = localStorage.getItem("empCode");
 const barcode = new URLSearchParams(location.search).get("barcode");
@@ -302,7 +303,7 @@ if (!token || !ward || !empCode || !barcode) {
 } else {
   document.getElementById("rxInfo").innerHTML = `
     <div class="info-top">
-      護理站：<strong>${ward}</strong>  人員：<strong>${empName}</strong>
+      護理站：<strong>${ward}</strong>  人員：<strong>${empName}</strong><strong>${(empNo)}</strong>
     </div>
     <div class="info-bottom">
       醫囑號：<strong>${barcode}</strong>
