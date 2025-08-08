@@ -205,7 +205,7 @@
   </div>
 </div>
 
-<!-- 🔔 新增：高貴/冷藏 提醒 Modal（一次彙整顯示） -->
+<!-- 🔔 新增：高貴/冷藏 三層提醒 Modal（上：高貴／中：高貴+冷藏／下：冷藏） -->
 <div id="noticeModal" style="
   display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
   background:rgba(0,0,0,0.5); z-index:9999; animation: fadeIn .2s ease;">
@@ -213,10 +213,29 @@
     background:#fff; padding:20px; max-width:420px; margin:25vh auto;
     border-radius:14px; text-align:left; box-shadow:0 4px 16px rgba(0,0,0,.25);
     font-family:'Noto Sans TC',sans-serif; animation: slideUp .2s ease;">
+
     <div style="font-size:18px; font-weight:700; color:#333; margin-bottom:8px;">
       ⚠️ 特殊處理提醒
     </div>
-    <div id="noticeList" style="font-size:16px; line-height:1.6; color:#444;"></div>
+
+    <!-- 上：高貴 -->
+    <div id="noticeExp" style="margin-bottom:10px; display:none;">
+      <div style="font-weight:700; color:#6a1b9a; margin-bottom:4px;">高貴藥</div>
+      <ul id="noticeListExp" style="padding-left:1.2em; margin:0;"></ul>
+    </div>
+
+    <!-- 中：高貴 + 冷藏 -->
+    <div id="noticeBoth" style="margin-bottom:10px; display:none;">
+      <div style="font-weight:700; color:#b71c1c; margin-bottom:4px;">高貴 + 冷藏</div>
+      <ul id="noticeListBoth" style="padding-left:1.2em; margin:0;"></ul>
+    </div>
+
+    <!-- 下：冷藏 -->
+    <div id="noticeFrz" style="margin-bottom:10px; display:none;">
+      <div style="font-weight:700; color:#01579b; margin-bottom:4px;">冷藏藥</div>
+      <ul id="noticeListFrz" style="padding-left:1.2em; margin:0;"></ul>
+    </div>
+
     <div style="text-align:right; margin-top:12px;">
       <button id="noticeOk" style="
         padding:10px 16px; background:#1976d2; color:#fff; border:none;
@@ -293,7 +312,7 @@ function renderDrugList(data) {
 
   const meds = Array.isArray(data?.content) ? data.content : [];
 
-  // 🔔 新增：接收藥單後檢查「高貴/冷藏」並一次提醒
+  // 🔔 新增：接收藥單後檢查（高貴 / 高貴+冷藏 / 冷藏）並分段提醒
   showSpecialWarnings(meds);
 
   if (meds.length === 0) {
@@ -354,24 +373,42 @@ function showCustomConfirm(onConfirm, onCancel) {
   };
 }
 
-// 🔔 新增：高貴/冷藏提醒（一次彙整）
+// 🔔 新版：高貴 / 高貴+冷藏 / 冷藏 三層提醒
 function showSpecialWarnings(meds) {
-  const msgs = [];
+  const expOnly = [];   // 只有高貴
+  const both    = [];   // 高貴 + 冷藏
+  const frzOnly = [];   // 只有冷藏
+
   meds.forEach(m => {
-    const isExp = String(m.IsExpensive).toLowerCase() === "false";
-    const isFrz = String(m.IsFreezer).toLowerCase() === "false";
-    if (isExp || isFrz) {
-      let s = `「${m.ItemName}」為`;
-      if (isExp && isFrz) s += "高貴藥且冷藏藥，請小心拿取並記得冷藏。";
-      else if (isExp)   s += "高貴藥，請小心拿取。";
-      else              s += "冷藏藥，請記得冷藏。";
-      msgs.push(s);
+    const isExp = String(m.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(m.IsFreezer).toLowerCase() === "true";
+    if (isExp && isFrz) {
+      both.push(`「${m.ItemName}」為高貴且需冷藏，請小心拿取並記得冷藏。`);
+    } else if (isExp) {
+      expOnly.push(`「${m.ItemName}」為高貴藥，請小心拿取。`);
+    } else if (isFrz) {
+      frzOnly.push(`「${m.ItemName}」為冷藏藥，請記得冷藏。`);
     }
   });
-  if (!msgs.length) return;
 
-  document.getElementById("noticeList").innerHTML =
-    `<ul style="padding-left:1.2em;margin:0;">${msgs.map(t => `<li>${t}</li>`).join("")}</ul>`;
+  if (!expOnly.length && !both.length && !frzOnly.length) return;
+
+  const secExp  = document.getElementById("noticeExp");
+  const secBoth = document.getElementById("noticeBoth");
+  const secFrz  = document.getElementById("noticeFrz");
+  const ulExp   = document.getElementById("noticeListExp");
+  const ulBoth  = document.getElementById("noticeListBoth");
+  const ulFrz   = document.getElementById("noticeListFrz");
+
+  // 清空 & 顯示控制
+  ulExp.innerHTML = ulBoth.innerHTML = ulFrz.innerHTML = "";
+  secExp.style.display  = expOnly.length ? "block" : "none";
+  secBoth.style.display = both.length    ? "block" : "none";
+  secFrz.style.display  = frzOnly.length ? "block" : "none";
+
+  if (expOnly.length) ulExp.innerHTML = expOnly.map(t => `<li>${t}</li>`).join("");
+  if (both.length)    ulBoth.innerHTML = both.map(t => `<li>${t}</li>`).join("");
+  if (frzOnly.length) ulFrz.innerHTML = frzOnly.map(t => `<li>${t}</li>`).join("");
 
   const modal = document.getElementById("noticeModal");
   modal.style.display = "block";
