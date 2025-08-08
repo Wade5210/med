@@ -35,30 +35,40 @@
     }
 
     /* === 新增：外層容器與左側標籤樣式 === */
-    .med-card-wrapper {
-      position: relative;
-    }
-    .pill-label {
-      position: absolute;
-      left: -28px;              /* 往左放到字卡外面 */
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;   /* 若有兩個標籤就上下堆疊 */
-      gap: 4px;
-      pointer-events: none;     /* 不擋點擊 */
-    }
-    .pill-label span {
-      display: inline-block;
-      padding: 3px 6px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1;
-      text-align: center;
-      min-width: 22px;
-    }
+  .med-card-wrapper {
+  position: relative;
+  padding-left: 32px;   /* 給左側標籤保留空間（原本是沒有的） */
+}
+
+.pill-label {
+  position: absolute;
+  left: 6px;            /* 放在 wrapper 內側，不用負值了 */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.pill-label span {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  text-align: center;
+  min-width: 22px;
+}
+
+/* 行動裝置再微調一下字級與左側保留空間 */
+@media (max-width: 420px) {
+  .med-card-wrapper { padding-left: 28px; }
+  .pill-label span { font-size: 11px; padding: 2px 5px; min-width: 20px; }
+}
+
     .pill-expensive { background: #6a1b9a; } /* 櫃：高貴 */
     .pill-freezer  { background: #01579b; } /* 冷：冷藏 */
     .pill-both     { background: #b71c1c; } /* 兩者合一時若想用單一標籤可用 */
@@ -291,7 +301,7 @@ if (!token || !ward || !empCode || !barcode) {
 } else {
   document.getElementById("rxInfo").innerHTML = `
     <div class="info-top">
-      護理站：<strong>${ward}</strong>  人員：<strong>${empCode}</strong>
+      護理站：<strong>${ward}</strong>  人員：<strong>${empName}</strong><strong>${(empCode)}</strong>
     </div>
     <div class="info-bottom">
       醫囑號：<strong>${barcode}</strong>
@@ -355,7 +365,7 @@ function renderDrugList(data) {
     const wrapper = document.createElement("div");
     wrapper.className = "med-card-wrapper";
 
-    // 依屬性建立「櫃 / 冷」標籤；兩者皆 true 則上下顯示兩塊
+    // 依屬性建立「貴 / 冷」標籤；兩者皆 true 則上下顯示兩塊
     const isExp = String(med.IsExpensive).toLowerCase() === "false";
     const isFrz = String(med.IsFreezer).toLowerCase() === "false";
     if (isExp || isFrz) {
@@ -364,7 +374,7 @@ function renderDrugList(data) {
       if (isExp) {
         const b = document.createElement("span");
         b.className = "pill-expensive";
-        b.textContent = "櫃";
+        b.textContent = "貴";
         badgeBox.appendChild(b);
       }
       if (isFrz) {
