@@ -33,6 +33,36 @@
       max-width: 720px;
       margin: 0 auto;
     }
+
+    /* === 新增：外層容器與左側標籤樣式 === */
+    .med-card-wrapper {
+      position: relative;
+    }
+    .pill-label {
+      position: absolute;
+      left: -28px;              /* 往左放到字卡外面 */
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;   /* 若有兩個標籤就上下堆疊 */
+      gap: 4px;
+      pointer-events: none;     /* 不擋點擊 */
+    }
+    .pill-label span {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      text-align: center;
+      min-width: 22px;
+    }
+    .pill-expensive { background: #6a1b9a; } /* 櫃：高貴 */
+    .pill-freezer  { background: #01579b; } /* 冷：冷藏 */
+    .pill-both     { background: #b71c1c; } /* 兩者合一時若想用單一標籤可用 */
+
     .med-card {
       display: grid;
       grid-template-columns: 56px 1fr 50px 30px;
@@ -312,7 +342,7 @@ function renderDrugList(data) {
 
   const meds = Array.isArray(data?.content) ? data.content : [];
 
-  // 🔔 新增：接收藥單後檢查（高貴 / 高貴+冷藏 / 冷藏）並分段提醒
+  // 🔔 接收藥單後檢查（高貴 / 高貴+冷藏 / 冷藏）並分段提醒（原有功能保留）
   showSpecialWarnings(meds);
 
   if (meds.length === 0) {
@@ -321,6 +351,32 @@ function renderDrugList(data) {
   }
 
   meds.forEach(med => {
+    /* === 新增：外層 wrapper 與左側標籤 === */
+    const wrapper = document.createElement("div");
+    wrapper.className = "med-card-wrapper";
+
+    // 依屬性建立「櫃 / 冷」標籤；兩者皆 true 則上下顯示兩塊
+    const isExp = String(med.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(med.IsFreezer).toLowerCase() === "true";
+    if (isExp || isFrz) {
+      const badgeBox = document.createElement("div");
+      badgeBox.className = "pill-label";
+      if (isExp) {
+        const b = document.createElement("span");
+        b.className = "pill-expensive";
+        b.textContent = "櫃";
+        badgeBox.appendChild(b);
+      }
+      if (isFrz) {
+        const b = document.createElement("span");
+        b.className = "pill-freezer";
+        b.textContent = "冷";
+        badgeBox.appendChild(b);
+      }
+      wrapper.appendChild(badgeBox);
+    }
+
+    /* === 原本字卡 === */
     const card = document.createElement("div");
     card.className = "med-card";
     card.dataset.code = med.ItemNo;
@@ -353,7 +409,10 @@ function renderDrugList(data) {
     card.appendChild(qtyOnly);
     card.appendChild(checkWrap);
 
-    container.appendChild(card);
+    /* 包裝：先放標籤，再放卡片 */
+    wrapper.appendChild(card);
+    container.appendChild(wrapper);
+
     handleCheckbox(card, checkbox);
   });
 
@@ -373,15 +432,15 @@ function showCustomConfirm(onConfirm, onCancel) {
   };
 }
 
-// 🔔 新版：高貴 / 高貴+冷藏 / 冷藏 三層提醒
+/* 原本的三層提醒：維持你檔案裡的版本，不改動 */
 function showSpecialWarnings(meds) {
-  const expOnly = [];   // 只有高貴
-  const both    = [];   // 高貴 + 冷藏
-  const frzOnly = [];   // 只有冷藏
+  const expOnly = [];
+  const both    = [];
+  const frzOnly = [];
 
   meds.forEach(m => {
-    const isExp = String(m.IsExpensive).toLowerCase() === "false";
-    const isFrz = String(m.IsFreezer).toLowerCase() === "false";
+    const isExp = String(m.IsExpensive).toLowerCase() === "false"; // ← 保持你檔案現有邏輯
+    const isFrz = String(m.IsFreezer).toLowerCase() === "false";   // ← 保持你檔案現有邏輯
     if (isExp && isFrz) {
       both.push(`「${m.ItemName}」為高貴且需冷藏，請小心拿取並記得冷藏。`);
     } else if (isExp) {
@@ -400,7 +459,6 @@ function showSpecialWarnings(meds) {
   const ulBoth  = document.getElementById("noticeListBoth");
   const ulFrz   = document.getElementById("noticeListFrz");
 
-  // 清空 & 顯示控制
   ulExp.innerHTML = ulBoth.innerHTML = ulFrz.innerHTML = "";
   secExp.style.display  = expOnly.length ? "block" : "none";
   secBoth.style.display = both.length    ? "block" : "none";
