@@ -369,8 +369,8 @@ function renderDrugList(data) {
     wrapper.className = "med-card-wrapper";
 
     // 依屬性建立「貴 / 冷」標籤；兩者皆 true 則上下顯示兩塊
-    const isExp = String(med.IsExpensive).toLowerCase() === "false";
-    const isFrz = String(med.IsFreezer).toLowerCase() === "false";
+    const isExp = String(med.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(med.IsFreezer).toLowerCase() === "true";
     if (isExp || isFrz) {
       const badgeBox = document.createElement("div");
       badgeBox.className = "pill-label";
@@ -452,8 +452,8 @@ function showSpecialWarnings(meds) {
   const frzOnly = [];
 
   meds.forEach(m => {
-    const isExp = String(m.IsExpensive).toLowerCase() === "false"; // ← 保持你檔案現有邏輯
-    const isFrz = String(m.IsFreezer).toLowerCase() === "false";   // ← 保持你檔案現有邏輯
+    const isExp = String(m.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(m.IsFreezer).toLowerCase() === "true";
     if (isExp && isFrz) {
       both.push(`「${m.ItemName}」為高貴且需冷藏，請小心拿取並記得冷藏。`);
     } else if (isExp) {
