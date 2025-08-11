@@ -2,48 +2,163 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📋 顯示藥單</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
-      background: #f0f9ff;
-      padding: 20px;
+      background: #e3f2fd;
+      padding: 10px;
+      margin: 0;
+    }
+    .info { text-align: center; margin: 12px 0; font-size: 16px; }
+    .count {
+      font-weight: bold;
+      color: #2e7d32;
+      text-align: right;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .error-msg {
+      color: red;
+      font-size: 20px;
       text-align: center;
+      margin-top: 20px;
     }
-    table {
-      border-collapse: collapse;
-      margin: 20px auto;
-      width: 90%;
-      background: white;
-      box-shadow: 0 0 10px #ccc;
-      border-radius: 12px;
+    .card-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 720px;
+      margin: 0 auto;
     }
-    th, td {
-      border: 1px solid rgba(0,0,0,0.05);
+
+    /* === 新增：外層容器與左側標籤樣式 === */
+  .med-card-wrapper {
+  position: relative;
+  padding-left: 24px;   /* 給左側標籤保留空間（原本是沒有的） */
+}
+
+.pill-label {
+  position: absolute;
+  left: 6px;            /* 放在 wrapper 內側，不用負值了 */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.pill-label span {
+  display: inline-block;
+  padding: 3px 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  text-align: center;
+  min-width: 22px;
+  transform: translateX(-10px); /* 往左移 4px，可自行微調 */
+}
+
+/* 行動裝置再微調一下字級與左側保留空間 */
+@media (max-width: 420px) {
+  .med-card-wrapper { padding-left: 20px; }
+  .pill-label span { font-size: 12px; padding: 2px 5px; min-width: 20px; }
+}
+
+    .pill-expensive { background: #6a1b9a; } /* 櫃：高貴 */
+    .pill-freezer  { background: #01579b; } /* 冷：冷藏 */
+    .pill-both     { background: #b71c1c; } /* 兩者合一時若想用單一標籤可用 */
+
+    .med-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 50px 30px;
+      align-items: center;
+      gap: 5px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 8px 12px;
+      box-sizing: border-box;
+      position: relative;
     }
-    td:nth-child(2) {
+    .med-card.cancelled { background-color: #e0e0e0; }
+    .med-card img {
+      width: 48px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 8px;
+      cursor: zoom-in;
+    }
+    .med-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       text-align: left;
-      padding-left: 12px;
     }
-    th {
-      background: #1976d2;
-      color: white;
+    .med-info .name { font-size: 15pX; font-weight: bold; }
+    .checkbox-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .checkbox-area input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 24px 0;
     }
     .btn {
-      background: #2e7d32;
+      padding: 12px 24px;
+      background: #c3e2dd;
       color: white;
-      padding: 10px 20px;
+      font-size: 18px;
       border: none;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 8px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: bold;
     }
-    .med-image {
-      width: 60px;
-      border-radius: 6px;
-      cursor: zoom-in;
+    .btn:hover { background: #7dd6c7; }
+    #rxInfo {
+      text-align: left;
+      max-width: 720px;
+      margin: 0 auto 12px;
+      font-size: 18px;
+      line-height: 1.6;
+      padding: 0 10px;
+    }
+    .info-top {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+      color: #424242;
+      background: #fffde7;
+      padding: 8px 12px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-bottom: 1px solid #ddd;
+    }
+    .info-bottom {
+      text-align: right;
+      color: #424242;
+      background: #fffde7;
+      padding: 8px 12px;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-top: -1px;
     }
     #modal {
       display: none;
@@ -56,232 +171,364 @@
       background-color: rgba(0,0,0,0.8);
     }
     #modal img {
-      margin-top: 5%;
+      display: block;
+      margin: 5% auto;
       max-width: 90%;
       max-height: 90%;
     }
-    .cancelled {
-      background-color: #dcdcdc;
-      color: #555;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    #errorBox {
-      color: red;
-      font-size: 18px;
-      margin: 10px;
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
-     #rxInfo {
-  text-align: left;
-  max-width: 720px;
-  margin: 0 auto 12px;
-  font-size: 18px;
-  line-height: 1.6;
-  padding: 0 10px;
-}
-
-.info-top {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 500;
-  color: #424242;
-  background: #fffde7;
-  padding: 8px 12px;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  border-bottom: 1px solid #ddd;
-}
-
-.info-bottom {
-  text-align: right;
-  color: #424242;
-  background: #fffde7;
-  padding: 8px 12px;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-top: -1px; /* 貼齊上方 */
-}
- @media (max-width: 768px) {
-  body {
-    padding: 10px;
-  }
-
-  table {
-    width: 98%;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  th, td {
-    font-size: 20px;
-    padding: 8px;
-  }
-
-  .btn-row {
-    display: flex;
-    flex-direction: row;         /* 💡 橫向排列 */
-    justify-content: center;     /* 水平置中 */
-    flex-wrap: wrap;             /* 換行（若螢幕太小） */
-    gap: 12px;
-  }
-
-  .btn {
-    flex: 1 1 45%;               /* 每顆按鈕佔一半寬 */
-    font-size: 18px;
-    padding: 12px 10px;
-    box-sizing: border-box;
-  }
-
-  .med-image {
-    width: 48px;
-  }
-}
-
-
   </style>
 </head>
 <body>
-  <p id="rxInfo"></p>
-  <p id="errorBox"></p>
-  <div style="text-align: right;">
-    <p id="countDisplay"></p>
-  </div>
-  <div style="overflow-x:auto;">
-    <table id="resultTable" style="display:none;">
-      <tbody id="medBody"></tbody>
-    </table>
-  </div>
 
-  
+<div class="info" id="rxInfo"></div>
+<div class="info count" id="countDisplay">✅ 已簽收 0 / 0</div>
+<div class="error-msg" id="errorMsg"></div>
+<div class="card-container" id="cardContainer"></div>
+
+<div class="btn-row">
   <button class="btn" id="toggleBtn" onclick="toggleAll()">全部取消簽收</button>
-  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_zoom_github.html'">🔄 繼續掃描</button>
+  <button class="btn" onclick="location.href='https://wade5210.github.io/med/scan_github.html'">🔄 繼續掃描</button>
+</div>
 
-
-  <div id="modal" onclick="this.style.display='none'">
-    <img id="modal-img" src="" alt="放大圖片" />
+<!-- ✅ 自訂對話框：跨護理站簽收 -->
+<div id="customModal" style="
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100vw; height:100vh;
+  background-color:rgba(0,0,0,0.5);
+  z-index:9999;
+  animation: fadeIn 0.3s ease;
+">
+  <div style="
+    background:#e3f2fd;
+    padding:24px;
+    max-width:360px;
+    margin:30vh auto;
+    border-radius:16px;
+    text-align:center;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);
+    font-family:'Noto Sans TC', sans-serif;
+    animation: slideUp 0.3s ease;
+  ">
+    <p style="font-size:20px; font-weight:bold; color:#d32f2f; margin-bottom:16px;">
+      ⚠️ 此醫囑非本護理站<br>是否要簽收？
+    </p>
+    <button id="confirmYes" style="
+      margin:8px;
+      padding:12px 24px;
+      background:#1ec545;
+      color:white;
+      font-size:16px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    ">✅ 簽收</button>
+    <button id="confirmNo" style="
+      margin:8px;
+      padding:12px 24px;
+      background:#cfd8dc;
+      color:#333;
+      font-size:16px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    ">❌ 取消</button>
   </div>
+</div>
+
+<!-- 🔔 新增：高貴/冷藏 三層提醒 Modal（上：高貴／中：高貴+冷藏／下：冷藏） -->
+<div id="noticeModal" style="
+  display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
+  background:rgba(0,0,0,0.5); z-index:9999; animation: fadeIn .2s ease;">
+  <div style="
+    background:#fff; padding:20px; max-width:420px; margin:25vh auto;
+    border-radius:14px; text-align:left; box-shadow:0 4px 16px rgba(0,0,0,.25);
+    font-family:'Noto Sans TC',sans-serif; animation: slideUp .2s ease;">
+
+    <div style="font-size:18px; font-weight:700; color:#333; margin-bottom:8px;">
+      ⚠️ 特殊處理提醒
+    </div>
+
+    <!-- 上：高貴 -->
+    <div id="noticeExp" style="margin-bottom:10px; display:none;">
+      <div style="font-weight:700; color:#6a1b9a; margin-bottom:4px;">高貴藥</div>
+      <ul id="noticeListExp" style="padding-left:1.2em; margin:0;"></ul>
+    </div>
+
+    <!-- 中：高貴 + 冷藏 -->
+    <div id="noticeBoth" style="margin-bottom:10px; display:none;">
+      <div style="font-weight:700; color:#b71c1c; margin-bottom:4px;">高貴 + 冷藏</div>
+      <ul id="noticeListBoth" style="padding-left:1.2em; margin:0;"></ul>
+    </div>
+
+    <!-- 下：冷藏 -->
+    <div id="noticeFrz" style="margin-bottom:10px; display:none;">
+      <div style="font-weight:700; color:#01579b; margin-bottom:4px;">冷藏藥</div>
+      <ul id="noticeListFrz" style="padding-left:1.2em; margin:0;"></ul>
+    </div>
+
+    <div style="text-align:right; margin-top:12px;">
+      <button id="noticeOk" style="
+        padding:10px 16px; background:#1976d2; color:#fff; border:none;
+        border-radius:10px; cursor:pointer; font-weight:600;">我知道了</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal" onclick="this.style.display='none'">
+  <img id="modal-img" src="" alt="放大圖片" />
+</div>
 
 <script>
-  const defaultImg = "https://i.imgur.com/POcLxgF.png";
-  const params = new URLSearchParams(location.search);
-  const barcode = params.get("barcode");
-  const token = localStorage.getItem("token");
-  const ward = localStorage.getItem("ward");
-  const empCode = localStorage.getItem("empCode");
-  let allChecked = true;
+const token = localStorage.getItem("token");
+const empName = localStorage.getItem("empName");
+const ward = localStorage.getItem("ward");
+const empCode = localStorage.getItem("empCode");
+const barcode = new URLSearchParams(location.search).get("barcode");
+const defaultImg = "https://i.imgur.com/POcLxgF.png";
+let allChecked = true;
 
-  if (!ward || !barcode || !token || !empCode) {
-    document.getElementById("errorBox").textContent = "❌ 缺少必要資訊，請重新登入或掃描";
-  } else {
-document.getElementById("rxInfo").innerHTML = `
-  <div class="info-top">
-    護理站：<strong>${ward}</strong>  人員：<strong>${empCode}</strong>
-  </div>
-  <div class="info-bottom">
-    醫囑號：<strong>${barcode}</strong>
-  </div>
-`;
+if (!token || !ward || !empCode || !barcode) {
+  alert("❌ 資料不足，請重新登入或掃描");
+} else {
+  document.getElementById("rxInfo").innerHTML = `
+    <div class="info-top">
+      護理站：<strong>${ward}</strong>  人員：<strong>${empName}</strong>
+    </div>
+    <div class="info-bottom">
+      醫囑號：<strong>${barcode}</strong>
+    </div>`;
 
-    fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+  fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=${ward}&barcode=${barcode}&empCode=${empCode}`, {
+    headers: {
+      Authorization: token,
+      Accept: "application/json"
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    const errorBox = document.getElementById("errorMsg");
+
+    // ✅ 改用自訂 modal 判斷非本護理站
+    if (
+      data.code === 400 &&
+      typeof data.content === "string" &&
+      data.content.includes("非本護理站")
+    ) {
+      showCustomConfirm(
+        () => {
+          fetch(`https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DrugList?ward=XXXXXX&barcode=${barcode}&empCode=${empCode}`, {
+            headers: {
+              Authorization: token,
+              Accept: "application/json"
+            }
+          })
+          .then(res => res.json())
+          .then(renderDrugList);
+        },
+        () => {
+          errorBox.textContent = "❌ 已取消簽收，請確認護理站是否正確。";
+        }
+      );
+      return;
+    }
+
+    renderDrugList(data);
+  });
+}
+
+function renderDrugList(data) {
+  const container = document.getElementById("cardContainer");
+  const errorBox = document.getElementById("errorMsg");
+  container.innerHTML = "";
+
+  const meds = Array.isArray(data?.content) ? data.content : [];
+
+  // 🔔 接收藥單後檢查（高貴 / 高貴+冷藏 / 冷藏）並分段提醒（原有功能保留）
+  showSpecialWarnings(meds);
+
+  if (meds.length === 0) {
+    errorBox.textContent = "❌ 查無藥品資料";
+    return;
+  }
+
+  meds.forEach(med => {
+    /* === 新增：外層 wrapper 與左側標籤 === */
+    const wrapper = document.createElement("div");
+    wrapper.className = "med-card-wrapper";
+
+    // 依屬性建立「貴 / 冷」標籤；兩者皆 true 則上下顯示兩塊
+    const isExp = String(med.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(med.IsFreezer).toLowerCase() === "true";
+    if (isExp || isFrz) {
+      const badgeBox = document.createElement("div");
+      badgeBox.className = "pill-label";
+      if (isExp) {
+        const b = document.createElement("span");
+        b.className = "pill-expensive";
+        b.textContent = "貴";
+        badgeBox.appendChild(b);
+      }
+      if (isFrz) {
+        const b = document.createElement("span");
+        b.className = "pill-freezer";
+        b.textContent = "冷";
+        badgeBox.appendChild(b);
+      }
+      wrapper.appendChild(badgeBox);
+    }
+
+    /* === 原本字卡 === */
+    const card = document.createElement("div");
+    card.className = "med-card";
+    card.dataset.code = med.ItemNo;
+
+    const img = document.createElement("img");
+    img.src = med.ImageUrl;
+    img.onerror = () => img.src = defaultImg;
+    img.onclick = () => zoomImage(img.src);
+
+    const info = document.createElement("div");
+    info.className = "med-info";
+    info.innerHTML = `<div class="name">${med.ItemName}</div>`;
+
+    const qtyOnly = document.createElement("div");
+    qtyOnly.style.textAlign = "center";
+    qtyOnly.innerHTML = `<strong>${Number(med.TotQty).toFixed(3)}</strong>`;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "chkbox";
+    checkbox.checked = true;
+    checkbox.onchange = () => handleCheckbox(card, checkbox);
+
+    const checkWrap = document.createElement("div");
+    checkWrap.className = "checkbox-area";
+    checkWrap.appendChild(checkbox);
+
+    card.appendChild(img);
+    card.appendChild(info);
+    card.appendChild(qtyOnly);
+    card.appendChild(checkWrap);
+
+    /* 包裝：先放標籤，再放卡片 */
+    wrapper.appendChild(card);
+    container.appendChild(wrapper);
+
+    handleCheckbox(card, checkbox);
+  });
+
+  updateCount();
+}
+
+function showCustomConfirm(onConfirm, onCancel) {
+  const modal = document.getElementById("customModal");
+  modal.style.display = "block";
+  document.getElementById("confirmYes").onclick = () => {
+    modal.style.display = "none";
+    onConfirm();
+  };
+  document.getElementById("confirmNo").onclick = () => {
+    modal.style.display = "none";
+    onCancel();
+  };
+}
+
+/* 原本的三層提醒：維持你檔案裡的版本，不改動 */
+function showSpecialWarnings(meds) {
+  const expOnly = [];
+  const both    = [];
+  const frzOnly = [];
+
+  meds.forEach(m => {
+    const isExp = String(m.IsExpensive).toLowerCase() === "true";
+    const isFrz = String(m.IsFreezer).toLowerCase() === "true";
+    if (isExp && isFrz) {
+      both.push(`「${m.ItemName}」為高貴且需冷藏，請小心拿取並記得冷藏。`);
+    } else if (isExp) {
+      expOnly.push(`「${m.ItemName}」為高貴藥，請小心拿取。`);
+    } else if (isFrz) {
+      frzOnly.push(`「${m.ItemName}」為冷藏藥，請記得冷藏。`);
+    }
+  });
+
+  if (!expOnly.length && !both.length && !frzOnly.length) return;
+
+  const secExp  = document.getElementById("noticeExp");
+  const secBoth = document.getElementById("noticeBoth");
+  const secFrz  = document.getElementById("noticeFrz");
+  const ulExp   = document.getElementById("noticeListExp");
+  const ulBoth  = document.getElementById("noticeListBoth");
+  const ulFrz   = document.getElementById("noticeListFrz");
+
+  ulExp.innerHTML = ulBoth.innerHTML = ulFrz.innerHTML = "";
+  secExp.style.display  = expOnly.length ? "block" : "none";
+  secBoth.style.display = both.length    ? "block" : "none";
+  secFrz.style.display  = frzOnly.length ? "block" : "none";
+
+  if (expOnly.length) ulExp.innerHTML = expOnly.map(t => `<li>${t}</li>`).join("");
+  if (both.length)    ulBoth.innerHTML = both.map(t => `<li>${t}</li>`).join("");
+  if (frzOnly.length) ulFrz.innerHTML = frzOnly.map(t => `<li>${t}</li>`).join("");
+
+  const modal = document.getElementById("noticeModal");
+  modal.style.display = "block";
+  document.getElementById("noticeOk").onclick = () => { modal.style.display = "none"; };
+}
+
+function handleCheckbox(card, checkbox) {
+  card.classList.toggle("cancelled", !checkbox.checked);
+  updateCount();
+  if (!checkbox.checked) {
+    const itemCode = card.dataset.code;
+    const body = { BarCode: barcode, ItemCode: itemCode, SignUser: empCode };
+    fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
+      method: "POST",
       headers: {
         Authorization: token,
-        Accept: "application/json"
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.getElementById("medBody");
-      const table = document.getElementById("resultTable");
-
-      if (typeof data.content === "string") {
-        document.getElementById("errorBox").textContent = "⚠️ " + data.content;
-        return;
-      }
-
-      const meds = Array.isArray(data?.content) ? data.content : [];
-
-      if (meds.length === 0) {
-        document.getElementById("errorBox").textContent = "❌ 查無藥品資料";
-        return;
-      }
-
-      meds.forEach(med => {
-        const tr = document.createElement("tr");
-        tr.setAttribute("data-code", med.ItemNo);  // 綁定藥品代碼
-
-        tr.innerHTML = `
-          <td><img src="${med.ImageUrl}" class="med-image" onclick="zoomImage(this.src)" onerror="this.src='${defaultImg}'"></td>
-          <td>${med.ItemName}</td>
-          <td>${med.TotQty}</td>
-          <td><input type="checkbox" class="chkbox" onchange="handleCheckbox(this)" checked></td>
-        `;
-
-        tbody.appendChild(tr);
-        handleCheckbox(tr.querySelector("input"));
-      });
-
-      table.style.display = "table";
-      updateCount();
-    })
-    .catch(() => {
-      document.getElementById("errorBox").textContent = "❌ 藥品資料載入失敗，請稍後再試";
-    });
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }).then(res => res.json())
+      .then(result => console.log("✅ 已取消簽收：", result))
+      .catch(err => console.error("❌ 取消簽收失敗：", err));
   }
+}
 
-  function handleCheckbox(cb) {
-    const tr = cb.closest("tr");
-    tr.classList.toggle("cancelled", !cb.checked);
-    updateCount();
+function updateCount() {
+  const total = document.querySelectorAll(".chkbox").length;
+  const checked = document.querySelectorAll(".chkbox:checked").length;
+  document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${total}`;
+}
 
-    if (!cb.checked) {
-      const itemCode = tr.getAttribute("data-code");
+function toggleAll() {
+  const boxes = document.querySelectorAll(".chkbox");
+  allChecked = !allChecked;
+  document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
+  boxes.forEach(cb => {
+    cb.checked = allChecked;
+    handleCheckbox(cb.closest(".med-card"), cb);
+  });
+}
 
-      const body = {
-        BarCode: barcode,
-        ItemCode: itemCode,
-        SignUser: empCode
-      };
-
-      fetch("https://mdevws.csh.org.tw/WebAPI/MedicationConfirm/Medication/DeleteDrugTranLog", {
-        method: "POST",
-        headers: {
-          Authorization: token,
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      })
-      .then(res => res.json())
-      .then(result => {
-        console.log("✅ 已取消簽收：", result);
-      })
-      .catch(err => {
-        console.error("❌ 取消簽收失敗：", err);
-      });
-    }
-  }
-
-  function updateCount() {
-    const all = document.querySelectorAll(".chkbox").length;
-    const checked = document.querySelectorAll(".chkbox:checked").length;
-    document.getElementById("countDisplay").textContent = `✅ 已簽收 ${checked} / ${all}`;
-  }
-
-  function zoomImage(src) {
-    document.getElementById("modal-img").src = src;
-    document.getElementById("modal").style.display = "block";
-  }
-
-  function toggleAll() {
-    const boxes = document.querySelectorAll(".chkbox");
-    allChecked = !allChecked;
-    document.getElementById("toggleBtn").textContent = allChecked ? "全部取消簽收" : "全部勾選";
-    boxes.forEach(cb => {
-      cb.checked = allChecked;
-      cb.dispatchEvent(new Event("change")); // 確保觸發 onchange 處理
-    });
-  }
-
+function zoomImage(src) {
+  const modal = document.getElementById("modal");
+  const modalImg = document.getElementById("modal-img");
+  modalImg.src = src;
+  modal.style.display = "block";
+}
 </script>
+
 </body>
 </html>
