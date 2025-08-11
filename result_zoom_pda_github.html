@@ -30,7 +30,7 @@
     .card-container {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
       max-width: 720px;
       margin: 0 auto;
     }
@@ -75,7 +75,11 @@
     .pill-freezer  { background: #01579b; } /* 冷：冷藏 */
     .pill-both     { background: #b71c1c; } /* 兩者合一時若想用單一標籤可用 */
 
+    .card-container {
+      gap: 6px;              /* 字卡之間的距離 */
+      }
     .med-card {
+      min-height: 72px
       display: grid;
       grid-template-columns: 56px 1fr 50px 30px;
       align-items: center;
@@ -83,7 +87,7 @@
       background: #fff;
       border-radius: 16px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 6px 6px;
+      padding: 4px 4px;
       box-sizing: border-box;
       position: relative;
     }
