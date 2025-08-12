@@ -53,7 +53,7 @@
     const input = document.getElementById("barcodeInput");
 
     input.addEventListener("keyup", function (e) {
-      if (e.key === "Enter" || input.value.length >= 5) {
+      if (e.key === "Enter" || input.value.length >= 10) {
         const barcode = encodeURIComponent(input.value.trim());
         const ward = localStorage.getItem("ward");
         if (!ward) {
