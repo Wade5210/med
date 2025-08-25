@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>護理站清單選擇（Inline Panel）</title>
+<style>
+  :root { --pad:10px; --ctl-h:38px; --radius:10px; --maxw:1100px; }
+  html, body { height:100%; }
+  body { margin:0; font-family:'Noto Sans TC', system-ui, -apple-system, sans-serif; background:#f1f5f9; }
+
+  .topbar { position: sticky; top:0; z-index:30; width:100%; background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,.06); }
+  .topbar-inner { padding:var(--pad); max-width:var(--maxw); margin:0 auto; }
+  .field label { font-weight:600; display:block; margin:0 0 4px; font-size:20px; color:#334155; }
+
+  /* 觸發按鈕 */
+  .trigger {
+    width:100%; height:var(--ctl-h); padding:0 12px;
+    border:1px solid #cbd5e1; border-radius:var(--radius); background:#fff; color:#0f172a;
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  }
+  .trigger .placeholder { color:#64748b; }
+  .caret { margin-left:8px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #475569; transition:transform .15s; }
+  .trigger.open .caret { transform: rotate(180deg); }
+
+  /* Inline 面板（頂欄下方展開） */
+  .inline-panel-wrap { background:#fff; border-bottom:1px solid #e2e8f0; box-shadow:0 8px 24px rgba(0,0,0,.06); display:none; }
+  .inline-panel-wrap.open { display:block; }
+  .inline-panel { padding:12px; max-width:var(--maxw); margin:0 auto; }
+  .panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .panel-title { font-size:14px; font-weight:600; color:#334155; }
+  .panel-close { border:0; background:transparent; cursor:pointer; font-size:14px; color:#475569; }
+
+  /* 按鈕網格 */
+  .ward-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap:8px; }
+  .chip {
+    height:var(--ctl-h); padding:0 10px;
+    border:1px solid #cbd5e1; border-radius:999px; background:#fff; color:#0f172a;
+    cursor:pointer; white-space:nowrap;
+  }
+  .chip:hover { border-color:#94a3b8; }
+  .chip.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .chip:disabled { opacity:.6; cursor:not-allowed; }
+
+  @media (max-width:720px){ :root{ --ctl-h:42px; } }
+
+  /* Modal（結果提示） */
+  .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:50; }
+  .modal.active{ display:flex; }
+  .modal-card{ background:#fff; width:min(92vw,420px); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.18); padding:18px; }
+  .modal-card h3{ margin:0 0 8px; font-size:20px; }
+  .modal-card p{ margin:0 0 14px; color:#334155; line-height:1.5; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; }
+  .btn-primary{ background:#2563eb; color:#fff; border:0; border-radius:10px; padding:10px 16px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+  <!-- 頂部：一個觸發鈕 -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="field">
+        <label for="wardTrigger">護理站</label>
+        <button id="wardTrigger" class="trigger" type="button" aria-expanded="false">
+          <span id="wardCurrent" class="placeholder">請選擇護理站</span>
+          <span class="caret" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 頂欄下方的「頁面內展開」面板 -->
+  <div id="inlinePanelWrap" class="inline-panel-wrap" aria-hidden="true">
+    <div class="inline-panel">
+      <div class="panel-head">
+        <div class="panel-title">選擇護理站</div>
+        <button id="panelClose" class="panel-close" type="button">關閉 ✕</button>
+      </div>
+      <div id="wardGrid" class="ward-grid">
+        <!-- 動態產生護理站按鈕 -->
+      </div>
+    </div>
+  </div>
+
+  <main></main>
+
+  <!-- 通知視窗 -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMsg">
+      <h3 id="modalTitle">通知</h3>
+      <p id="modalMsg">訊息內容</p>
+      <div class="modal-actions">
+        <button id="modalOk" class="btn-primary" type="button">確定</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===== 設定 ===== */
+const API_BASE = 'https://mdevws.csh.org.tw/WebAPI/MedicationConfirm';   // 改為你的 API base
+const TOKEN    = 'Q29ubmVjdERCIExvY2FsSG9zdA';                           // 或 localStorage.getItem('token')
+const DEFAULT_EMP_NO = '15432';
+
+/* ===== DOM ===== */
+const trigger   = document.getElementById('wardTrigger');
+const currentEl = document.getElementById('wardCurrent');
+const panelWrap = document.getElementById('inlinePanelWrap');
+const panelClose= document.getElementById('panelClose');
+const wardGrid  = document.getElementById('wardGrid');
+
+/* ===== Modal ===== */
+const modal = document.getElementById('modal');
+const modalTitleEl = document.getElementById('modalTitle');
+const modalMsgEl = document.getElementById('modalMsg');
+const modalOk = document.getElementById('modalOk');
+function openModal(msg, title='通知'){ modalTitleEl.textContent=title; modalMsgEl.textContent=msg; modal.classList.add('active'); setTimeout(()=>modalOk.focus(),0); }
+function closeModal(){ modal.classList.remove('active'); }
+modalOk.addEventListener('click', closeModal);
+
+/* ===== 展開/收合 ===== */
+function openPanel(){ panelWrap.classList.add('open'); panelWrap.setAttribute('aria-hidden','false'); trigger.classList.add('open'); trigger.setAttribute('aria-expanded','true'); }
+function closePanel(){ panelWrap.classList.remove('open'); panelWrap.setAttribute('aria-hidden','true'); trigger.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
+trigger.addEventListener('click', ()=> panelWrap.classList.contains('open') ? closePanel() : openPanel());
+panelClose.addEventListener('click', closePanel);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePanel(); });
+
+/* ===== 資料 ===== */
+let wardMap = new Map(); // ward -> departNo
+let isUpdating = false;
+
+/* ===== 載入護理站清單 ===== */
+async function loadWardList(){
+  wardGrid.innerHTML = '<button class="chip" disabled>載入中…</button>';
+
+  try{
+    const res = await fetch(`${API_BASE}/Medication/GetWardList`, {
+      method:'GET',
+      headers:{ accept:'application/json', Authorization:`Bearer ${TOKEN}` }
+    });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if(data?.code !== 200 || !Array.isArray(data?.content)) throw new Error('資料格式不符預期');
+
+    wardMap = new Map(data.content.map(x => [String(x.ward), String(x.departNo)]));
+    renderGrid(data.content);
+  }catch(err){
+    wardGrid.innerHTML = '';
+    openModal('護理站清單載入失敗：' + err.message, '載入失敗');
+  }
+}
+
+function renderGrid(list){
+  wardGrid.innerHTML = '';
+  const savedWard = localStorage.getItem('ward') || '';
+
+  list.forEach(item=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip' + (item.ward === savedWard ? ' active' : '');
+    btn.textContent = item.ward;
+    btn.dataset.ward = item.ward;
+
+    btn.addEventListener('click', ()=> onPickWard(item.ward));
+    wardGrid.appendChild(btn);
+  });
+
+  // 還原顯示當前 ward
+  if (savedWard && wardMap.has(savedWard)) {
+    currentEl.textContent = savedWard;
+    currentEl.classList.remove('placeholder');
+  } else {
+    currentEl.textContent = '請選擇護理站';
+    currentEl.classList.add('placeholder');
+  }
+}
+
+/* ===== 選取即儲存＋送 API（不顯示編號） ===== */
+async function onPickWard(ward){
+  if(isUpdating) return;
+  const departNo = wardMap.get(ward) || '';
+
+  // UI 標示
+  wardGrid.querySelectorAll('.chip.active').forEach(el=> el.classList.remove('active'));
+  const picked = [...wardGrid.querySelectorAll('.chip')].find(el=> el.dataset.ward===ward);
+  if(picked) picked.classList.add('active');
+
+  // 顯示目前選擇、收合面板
+  currentEl.textContent = ward;
+  currentEl.classList.remove('placeholder');
+  closePanel();
+
+  // 寫 localStorage
+  localStorage.setItem('ward', ward);
+  localStorage.setItem('departNo', departNo);
+
+  // 取得 empNo（無則用預設）
+  let empNo = localStorage.getItem('empNo') ?? localStorage.getItem('empNO') ?? localStorage.getItem('empCode') ?? '';
+  if(!empNo){ empNo = DEFAULT_EMP_NO; localStorage.setItem('empNo', empNo); }
+
+  // 呼叫更新 API
+  try{
+    isUpdating = true;
+    trigger.disabled = true; trigger.style.opacity = .7;
+
+    await updateSupportDepNo(empNo, departNo, empNo);
+    openModal(`已變更護理站為：${ward}`, '變更完成'); // 不顯示 departNo
+  }catch(err){
+    openModal('更新支援單位失敗：' + err.message, '錯誤');
+  }finally{
+    isUpdating = false;
+    trigger.disabled = false; trigger.style.opacity = '';
+  }
+}
+
+/* ===== API：UpdateSupportDetpNo ===== */
+async function updateSupportDepNo(empNo, supportDepNo, updateUser){
+  const url = `${API_BASE}/Medication/UpdateSupportDetpNo`;
+  const body = { empNo:String(empNo), supportDepNo:String(supportDepNo), updateUser:String(updateUser) };
+
+  const res = await fetch(url, {
+    method:'PUT',
+    headers:{ accept:'*/*','Content-Type':'application/json', Authorization:`Bearer ${TOKEN}` },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  let payload=null; try{ payload = JSON.parse(text); }catch{}
+  if(!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+  if(payload && payload.code && payload.code !== 200) throw new Error(`API 回傳非 200：${text}`);
+  return payload || text;
+}
+
+/* ===== 初始化 ===== */
+loadWardList();
+</script>
+</body>
+</html>
